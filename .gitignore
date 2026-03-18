@@ -1,0 +1,12 @@
+# Ignore system/temp files
+.DS_Store
+.Trash/
+*.Rhistory
+*.RData
+*.ipynb_checkpoints/
+
+# Ignore virtual environments
+venv/
+myenv/
+.anaconda/
+.conda/
