@@ -1,0 +1,114 @@
+{
+    "features": [
+        {
+            "id": "F-001",
+            "name": "Voice-to-Text Input",
+            "description": "User can tap to record voice which gets transcribed to text.",
+            "uiElements": [
+                "Start Recording Button (Microphone)",
+                "Transcription Text Area (Editable)",
+                "Bottom Navigation (Home, Stats, Profile)"
+            ],
+            "implementationFiles": [
+                "/src/components/VoiceInput.tsx",
+                "/src/hooks/useVoiceToText.ts"
+            ],
+            "testFiles": [
+                "/src/__tests__/VoiceInput.test.tsx",
+                "/e2e/voice-input.yaml"
+            ]
+        },
+        {
+            "id": "F-002",
+            "name": "Nutritional Extraction & Verification",
+            "description": "Extract carbs and glucose from text. Allow user to verify before calculation.",
+            "uiElements": [
+                "Verification List (Foods & Carbs)",
+                "Total Glucose Display",
+                "Settings Reminder Text"
+            ],
+            "implementationFiles": [
+                "/src/components/VerificationList.tsx",
+                "/src/utils/nlpExtractor.ts"
+            ],
+            "testFiles": [
+                "/src/__tests__/nlpExtractor.test.ts",
+                "/src/__tests__/VerificationList.test.tsx"
+            ]
+        },
+        {
+            "id": "F-003",
+            "name": "Insulin Calculation Breakdown",
+            "description": "Calculate and display meal and correction doses with transparent math.",
+            "uiElements": [
+                "Meal Dose Detail",
+                "Correction Dose Detail",
+                "Total Dose Display",
+                "Confirm Dose Button"
+            ],
+            "implementationFiles": [
+                "/src/components/DoseModal.tsx",
+                "/src/utils/insulinCalculator.ts"
+            ],
+            "testFiles": [
+                "/src/__tests__/insulinCalculator.test.ts",
+                "/src/__tests__/DoseModal.test.tsx",
+                "/e2e/dose-calculation.yaml"
+            ]
+        },
+        {
+            "id": "F-004",
+            "name": "Manual Carb Entry",
+            "description": "Allow manual input of carbohydrates as a fallback or quick add.",
+            "uiElements": [
+                "Carbohydrate Number Input",
+                "Save/Add Carbs Button"
+            ],
+            "implementationFiles": [
+                "/src/components/ManualCarbModal.tsx"
+            ],
+            "testFiles": [
+                "/src/__tests__/ManualCarbModal.test.tsx",
+                "/e2e/manual-carb-entry.yaml"
+            ]
+        },
+        {
+            "id": "F-005",
+            "name": "Medical Settings Configuration",
+            "description": "Set and securely store ICR, ISF, and target glucose.",
+            "uiElements": [
+                "Medical Settings Section",
+                "ICR Input",
+                "ISF Input",
+                "Target Glucose Input",
+                "Save Settings Button"
+            ],
+            "implementationFiles": [
+                "/src/components/MedicalSettingsList.tsx",
+                "/src/store/settingsStore.ts"
+            ],
+            "testFiles": [
+                "/src/__tests__/settingsStore.test.ts",
+                "/e2e/settings-update.yaml"
+            ]
+        },
+        {
+            "id": "F-006",
+            "name": "Daily Trends Dashboard",
+            "description": "View past 7 days of averages for glucose, carbs, and insulin.",
+            "uiElements": [
+                "Average Glucose Metric",
+                "Total Carbs Metric",
+                "Total Insulin Metric",
+                "Period Summary Graph/Chart"
+            ],
+            "implementationFiles": [
+                "/src/components/DailyTrends.tsx",
+                "/src/hooks/useStats.ts"
+            ],
+            "testFiles": [
+                "/src/__tests__/DailyTrends.test.tsx"
+            ]
+        }
+    ]
+}
