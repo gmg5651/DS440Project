@@ -1,0 +1,9 @@
+appId: com.swiftulin
+---
+- launchApp
+- tapOn: { id: "btn-calculate-dose" }
+- assertVisible: "Meal Dose"
+- assertVisible: "Correction Dose"
+- assertVisible: "Confirm Dose"
+- tapOn: { id: "btn-confirm-dose" }
+- assertVisible: "Dose Breakdown"

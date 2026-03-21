@@ -1,0 +1,8 @@
+appId: com.swiftulin
+---
+- launchApp
+- assertVisible: "Swiftulin"
+- tapOn: { id: "input-manual-carb" }
+- inputText: "45"
+- tapOn: { id: "btn-save-carb" }
+- assertVisible: "Manual Entry"
