@@ -1,28 +1,94 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { router } from 'expo-router';
+import { useFlowStore } from '@/store/flowStore';
+import { useSettingsStore } from '@/store/settingsStore';
+import { calculateDose } from '@/utils/insulinCalculator';
+import { db } from '@/db';
+import { mealLogs, glucoseLogs, doseLogs } from '@/db/schema';
 
 export default function DoseModal() {
+    const { extraction, resetFlow } = useFlowStore();
+    const settings = useSettingsStore();
+
+    const dose = useMemo(() => {
+        if (!extraction) return null;
+        const totalCarbsG = extraction.items.reduce((sum, i) => sum + i.carbsG, 0);
+        const glucoseMgDl = extraction.glucose || settings.targetGlucose;
+
+        return calculateDose({
+            totalCarbsG,
+            glucoseMgDl,
+            icr: settings.icr,
+            isf: settings.isf,
+            targetGlucose: settings.targetGlucose,
+        });
+    }, [extraction, settings]);
+
+    const handleConfirm = async () => {
+        if (!dose || !extraction) return;
+
+        try {
+            const now = Date.now();
+
+            // 1. Save meal items
+            for (const item of extraction.items) {
+                await db.insert(mealLogs).values({
+                    foodName: item.name,
+                    carbsG: item.carbsG,
+                    createdAt: now,
+                });
+            }
+
+            // 2. Save glucose if present
+            if (extraction.glucose) {
+                await db.insert(glucoseLogs).values({
+                    glucoseMgDl: extraction.glucose,
+                    createdAt: now,
+                });
+            }
+
+            // 3. Save dose
+            await db.insert(doseLogs).values({
+                mealDoseUnits: dose.mealDose,
+                correctionDoseUnits: dose.correctionDose,
+                totalUnits: dose.totalDose,
+                confirmed: true,
+                createdAt: now,
+            });
+
+            resetFlow();
+            router.replace('/');
+            // Alert.alert('Success', 'Dose logged successfully');
+        } catch (error) {
+            console.error('Failed to log dose:', error);
+            Alert.alert('Error', 'Failed to save dose to database');
+        }
+    };
+
+    if (!dose) return null;
+
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Dose Breakdown</Text>
 
             <View style={styles.row}>
                 <Text style={styles.label}>Meal Dose</Text>
-                <Text style={styles.value}>7.5 U</Text>
+                <Text style={styles.value}>{dose.mealDose.toFixed(1)} U</Text>
             </View>
             <View style={styles.row}>
                 <Text style={styles.label}>Correction Dose</Text>
-                <Text style={styles.value}>1.2 U</Text>
+                <Text style={styles.value}>{dose.correctionDose.toFixed(1)} U</Text>
             </View>
             <View style={[styles.row, styles.totalRow]}>
                 <Text style={styles.labelTotal}>Total</Text>
-                <Text style={styles.valueTotal}>8.7 U</Text>
+                <Text style={styles.valueTotal}>{dose.totalDose.toFixed(1)} U</Text>
             </View>
 
             <TouchableOpacity
                 style={styles.confirmButton}
                 testID="btn-confirm-dose"
-                onPress={() => { }}
+                onPress={handleConfirm}
             >
                 <Text style={styles.confirmText}>Confirm Dose</Text>
             </TouchableOpacity>

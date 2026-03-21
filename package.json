@@ -34,6 +34,8 @@
         "@babel/core": "^7.25.0",
         "@testing-library/jest-native": "^5.4.0",
         "@testing-library/react-native": "^12.0.0",
+        "@types/better-sqlite3": "^7.6.13",
+        "@types/jest": "^30.0.0",
         "@types/react": "~18.3.0",
         "@types/react-native": "~0.73.0",
         "babel-plugin-module-resolver": "^5.0.3",
@@ -47,7 +49,8 @@
     "jest": {
         "preset": "jest-expo",
         "setupFilesAfterEnv": [
-            "@testing-library/jest-native/extend-expect"
+            "@testing-library/jest-native/extend-expect",
+            "<rootDir>/src/__tests__/jest-setup.ts"
         ],
         "transformIgnorePatterns": [
             "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg)"
