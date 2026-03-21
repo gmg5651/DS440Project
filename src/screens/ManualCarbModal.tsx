@@ -17,7 +17,8 @@ export default function ManualCarbModal() {
         // Simulate an NLP extraction object from manual input
         setExtraction({
             items: [{ name: 'Manual Entry', carbsG: carbNum }],
-            glucose: isNaN(glucoseNum) ? undefined : glucoseNum,
+            glucose: isNaN(glucoseNum) ? null : glucoseNum,
+            confidence: 1.0,
         });
 
         router.push('/results');

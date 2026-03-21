@@ -6,7 +6,6 @@ import * as schema from './schema';
 let dbInstance: any;
 
 if (Platform.OS === 'web') {
-    // Mock for web demo purposes
     const mockQuery = () => ({
         from: () => ({
             where: () => Promise.resolve([]),

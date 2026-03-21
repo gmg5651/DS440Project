@@ -2,56 +2,69 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Platform } from 'react-native';
 
 export function useVoiceToText() {
-    const [status, setStatus] = useState<'idle' | 'listening' | 'done'>('idle');
+    const [status, setStatus] = useState<'idle' | 'listening' | 'done' | 'error'>('idle');
     const [transcript, setTranscript] = useState('');
+    const [error, setError] = useState<string | null>(null);
     const recognitionRef = useRef<any>(null);
 
     useEffect(() => {
-        if (Platform.OS === 'web' && (window as any).webkitSpeechRecognition) {
-            const SpeechRecognition = (window as any).webkitSpeechRecognition;
-            const recog = new SpeechRecognition();
-            recog.continuous = true;
-            recog.interimResults = true;
-            recog.lang = 'en-US';
+        if (Platform.OS === 'web') {
+            const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
-            recog.onresult = (event: any) => {
-                let finalTranscript = '';
-                let interimTranscript = '';
+            if (SpeechRecognition) {
+                const recog = new SpeechRecognition();
+                recog.continuous = true;
+                recog.interimResults = true;
+                recog.lang = 'en-US';
 
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript;
-                    } else {
-                        interimTranscript += event.results[i][0].transcript;
+                recog.onresult = (event: any) => {
+                    let finalTranscript = '';
+                    let interimTranscript = '';
+
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                        if (event.results[i].isFinal) {
+                            finalTranscript += event.results[i][0].transcript;
+                        } else {
+                            interimTranscript += event.results[i][0].transcript;
+                        }
                     }
-                }
 
-                setTranscript(finalTranscript || interimTranscript);
-            };
+                    const current = finalTranscript || interimTranscript;
+                    if (current.trim()) {
+                        setTranscript(current);
+                    }
+                };
 
-            recog.onstart = () => {
-                setStatus('listening');
-            };
+                recog.onstart = () => {
+                    setStatus('listening');
+                    setError(null);
+                };
 
-            recog.onend = () => {
-                setStatus('done');
-            };
+                recog.onend = () => {
+                    // Only set to done if we were listening
+                    setStatus(prev => prev === 'listening' ? 'done' : prev);
+                };
 
-            recog.onerror = (event: any) => {
-                console.error('Speech recognition error', event.error);
-                if (event.error === 'no-speech') {
-                    // Ignore no-speech errors to stay listening
-                } else {
-                    setStatus('idle');
-                }
-            };
+                recog.onerror = (event: any) => {
+                    console.error('Speech recognition error', event.error);
+                    if (event.error === 'not-allowed') {
+                        setError('Microphone permission denied');
+                    } else if (event.error === 'no-speech') {
+                        // ignore
+                    } else {
+                        setError(`Error: ${event.error}`);
+                    }
+                    setStatus('error');
+                };
 
-            recognitionRef.current = recog;
+                recognitionRef.current = recog;
+            }
         }
     }, []);
 
     const startRecording = useCallback(() => {
         setTranscript('');
+        setError(null);
         if (recognitionRef.current) {
             try {
                 recognitionRef.current.start();
@@ -60,17 +73,20 @@ export function useVoiceToText() {
                 console.error('Failed to start recognition', e);
             }
         } else {
-            // Fallback for environments without speech API
             setStatus('listening');
         }
     }, []);
 
     const stopRecording = useCallback(() => {
         if (recognitionRef.current) {
-            recognitionRef.current.stop();
+            try {
+                recognitionRef.current.stop();
+            } catch (e) {
+                console.error('Failed to stop recognition', e);
+            }
         }
         setStatus('done');
     }, []);
 
-    return { status, transcript, startRecording, stopRecording };
+    return { status, transcript, setTranscript, error, startRecording, stopRecording };
 }

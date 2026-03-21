@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 
 interface SettingsState {
     icr: number;
@@ -19,15 +21,20 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     setIsf: (v) => set({ isf: v }),
     setTargetGlucose: (v) => set({ targetGlucose: v }),
     loadFromSecureStore: async () => {
-        if (typeof window !== 'undefined') {
+        if (Platform.OS === 'web') {
             const raw = localStorage.getItem('swiftulin_settings');
+            if (raw) set(JSON.parse(raw));
+        } else {
+            const raw = await SecureStore.getItemAsync('settings');
             if (raw) set(JSON.parse(raw));
         }
     },
     saveToSecureStore: async () => {
-        if (typeof window !== 'undefined') {
-            const { icr, isf, targetGlucose } = get();
+        const { icr, isf, targetGlucose } = get();
+        if (Platform.OS === 'web') {
             localStorage.setItem('swiftulin_settings', JSON.stringify({ icr, isf, targetGlucose }));
+        } else {
+            await SecureStore.setItemAsync('settings', JSON.stringify({ icr, isf, targetGlucose }));
         }
     },
 }));
