@@ -8,19 +8,26 @@ export default function StatsScreen() {
     const [stats, setStats] = useState({ avgGlucose: 0, totalInsulin: 0, totalCarbs: 0 });
 
     useEffect(() => {
+        let isMounted = true;
         async function loadStats() {
-            // Basic aggregate queries
-            const glucoseResult = await db.select({ avg: sql<number>`avg(${glucoseLogs.glucoseMgDl})` }).from(glucoseLogs);
-            const doseResult = await db.select({ sum: sql<number>`sum(${doseLogs.totalUnits})` }).from(doseLogs);
-            const carbResult = await db.select({ sum: sql<number>`sum(${mealLogs.carbsG})` }).from(mealLogs);
+            try {
+                const glucoseResult = await db.select({ avg: sql<number>`avg(${glucoseLogs.glucoseMgDl})` }).from(glucoseLogs);
+                const doseResult = await db.select({ sum: sql<number>`sum(${doseLogs.totalUnits})` }).from(doseLogs);
+                const carbResult = await db.select({ sum: sql<number>`sum(${mealLogs.carbsG})` }).from(mealLogs);
 
-            setStats({
-                avgGlucose: Math.round(glucoseResult[0]?.avg || 0),
-                totalInsulin: parseFloat((doseResult[0]?.sum || 0).toFixed(1)),
-                totalCarbs: Math.round(carbResult[0]?.sum || 0),
-            });
+                if (isMounted) {
+                    setStats({
+                        avgGlucose: Math.round(glucoseResult[0]?.avg || 0),
+                        totalInsulin: parseFloat((doseResult[0]?.sum || 0).toFixed(1)),
+                        totalCarbs: Math.round(carbResult[0]?.sum || 0),
+                    });
+                }
+            } catch (e) {
+                console.error('Failed to load stats', e);
+            }
         }
         loadStats();
+        return () => { isMounted = false; };
     }, []);
 
     return (
