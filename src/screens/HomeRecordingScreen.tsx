@@ -22,7 +22,10 @@ export default function HomeRecordingScreen() {
                 <Text style={styles.transcriptText}>{transcript || 'Say something like "I had 2 slices of pizza and my glucose is 180"'}</Text>
             </View>
 
-            <View style={styles.pulseIndicator} />
+            <View style={[
+                styles.pulseIndicator,
+                transcript.length > 0 && { transform: [{ scale: 1.2 }], backgroundColor: 'rgba(0,122,255,0.4)' }
+            ]} />
 
             <TouchableOpacity
                 style={styles.stopButton}

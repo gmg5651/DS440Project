@@ -20,9 +20,11 @@ export default function HomeResultsScreen() {
         <View style={styles.container}>
             <Text style={styles.title}>Verification</Text>
 
-            <View style={styles.transcriptDebug}>
-                <Text style={styles.debugText}>"{transcript}"</Text>
-            </View>
+            {transcript ? (
+                <View style={styles.transcriptDebug}>
+                    <Text style={styles.debugText}>"{transcript}"</Text>
+                </View>
+            ) : null}
 
             <FlatList
                 data={items}

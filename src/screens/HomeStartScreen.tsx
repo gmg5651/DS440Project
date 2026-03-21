@@ -22,33 +22,83 @@ export default function HomeStartScreen() {
             <TouchableOpacity
                 style={styles.micButton}
                 testID="btn-start-recording"
-                onPress={handleStart}
-            >
-                <Text style={styles.micText}>🎤</Text>
+                onPress={handleStart}>
+                <Text style={styles.micIcon}>🎙️</Text>
             </TouchableOpacity>
 
-            <View style={styles.footer}>
-                <TouchableOpacity onPress={() => router.push('/settings')}>
-                    <Text style={styles.footerLink}>Settings</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => router.push('/stats')}>
-                    <Text style={styles.footerLink}>Stats</Text>
-                </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+                style={styles.manualButton}
+                onPress={() => router.push('/manual-carb')}>
+                <Text style={styles.manualText}>⌨️ Manual Entry</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={styles.statsButton}
+                onPress={() => router.push('/stats')}>
+                <Text style={styles.statsIcon}>📊 View Stats</Text>
+            </TouchableOpacity>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#121212', justifyContent: 'center', alignItems: 'center' },
-    title: { fontSize: 32, fontWeight: 'bold', color: '#fff', marginBottom: 8 },
-    subtitle: { fontSize: 16, color: '#aaa', marginBottom: 48 },
-    micButton: {
-        width: 120, height: 120, borderRadius: 60, backgroundColor: '#007AFF',
-        justifyContent: 'center', alignItems: 'center', shadowColor: '#007AFF',
-        shadowOpacity: 0.4, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }
+    container: {
+        flex: 1,
+        backgroundColor: '#0a0a0a',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 20,
     },
-    micText: { fontSize: 54 },
-    footer: { position: 'absolute', bottom: 60, flexDirection: 'row', gap: 40 },
-    footerLink: { color: '#007AFF', fontSize: 16, fontWeight: 'bold' }
+    title: {
+        fontSize: 48,
+        fontWeight: 'bold',
+        color: '#fff',
+        marginBottom: 10,
+    },
+    subtitle: {
+        fontSize: 18,
+        color: '#888',
+        marginBottom: 60,
+    },
+    micButton: {
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        backgroundColor: '#007AFF',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 40,
+        elevation: 10,
+        shadowColor: '#007AFF',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.5,
+        shadowRadius: 10,
+    },
+    micIcon: {
+        fontSize: 50,
+    },
+    manualButton: {
+        paddingVertical: 15,
+        paddingHorizontal: 30,
+        borderRadius: 30,
+        backgroundColor: '#1c1c1e',
+        marginBottom: 20,
+        borderWidth: 1,
+        borderColor: '#3a3a3c',
+    },
+    manualText: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: '600',
+    },
+    statsButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 10,
+    },
+    statsIcon: {
+        fontSize: 18,
+        color: '#007AFF',
+        fontWeight: '600',
+    },
 });
