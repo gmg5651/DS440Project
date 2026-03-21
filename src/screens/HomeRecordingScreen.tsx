@@ -1,12 +1,34 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { useVoiceToText } from '@/hooks/useVoiceToText';
+import { useAudioLevel } from '@/hooks/useAudioLevel';
 import { useFlowStore } from '@/store/flowStore';
+import { extractMealData } from '@/utils/nlpExtractor';
 import { router } from 'expo-router';
 
 export default function HomeRecordingScreen() {
     const { status, transcript, setTranscript, error, stopRecording, startRecording } = useVoiceToText();
+    const volume = useAudioLevel(status === 'listening');
     const setFlowTranscript = useFlowStore((state) => state.setTranscript);
+    const setExtraction = useFlowStore((state) => state.setExtraction);
+    const resetFlow = useFlowStore((state) => state.resetFlow);
+    const [isSecure, setIsSecure] = React.useState(true);
+
+    React.useEffect(() => {
+        resetFlow(); // Ensure state is clean
+        startRecording();
+
+        if (Platform.OS === 'web' && !window.isSecureContext) {
+            setIsSecure(false);
+        }
+    }, []);
+
+    React.useEffect(() => {
+        if (transcript) {
+            const result = extractMealData(transcript);
+            setExtraction(result);
+        }
+    }, [transcript]);
 
     const handleStop = () => {
         stopRecording();
@@ -19,18 +41,19 @@ export default function HomeRecordingScreen() {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.container}
         >
-            <Text style={styles.title}>
-                {status === 'listening' ? 'Listening...' : status === 'error' ? 'Voice Error' : 'Processing...'}
-            </Text>
-
-            {error && (
-                <View style={styles.errorBox}>
-                    <Text style={styles.errorText}>{error}</Text>
-                    <TouchableOpacity onPress={startRecording}>
-                        <Text style={styles.retryText}>Try Again</Text>
-                    </TouchableOpacity>
+            {!isSecure && (
+                <View style={styles.warningBox}>
+                    <Text style={styles.warningText}>⚠️ Voice requires HTTPS or localhost. Please use http://localhost:8081 for the demo.</Text>
                 </View>
             )}
+            <View style={styles.debugHeader}>
+                <Text style={styles.debugText}>Status: {status.toUpperCase()}</Text>
+                {error && <Text style={styles.errorText}>Error: {error}</Text>}
+            </View>
+
+            <Text style={styles.title}>
+                {status === 'listening' ? 'Speak Food Items...' : 'Processing...'}
+            </Text>
 
             <View style={styles.transcriptContainer}>
                 <TextInput
@@ -44,18 +67,31 @@ export default function HomeRecordingScreen() {
                 />
             </View>
 
-            <View style={[
-                styles.pulseIndicator,
-                transcript.length > 0 && { transform: [{ scale: 1.1 }], backgroundColor: 'rgba(0,122,255,0.4)' }
-            ]} />
+            <View style={styles.visualizerContainer}>
+                {[1, 2, 3, 4, 5].map((i) => (
+                    <View
+                        key={i}
+                        style={[
+                            styles.visualizerBar,
+                            { height: status === 'listening' ? 10 + (Math.random() * 30 * (transcript.length > 0 ? 1.5 : 1)) : 10 }
+                        ]}
+                    />
+                ))}
+            </View>
 
             <TouchableOpacity
                 style={styles.stopButton}
                 testID="btn-stop-recording"
                 onPress={handleStop}
             >
-                <Text style={styles.stopText}>⏹ Done</Text>
+                <Text style={styles.stopText}>⏹ Finish & Verify</Text>
             </TouchableOpacity>
+
+            {status === 'error' && (
+                <TouchableOpacity onPress={startRecording} style={styles.retryButton}>
+                    <Text style={styles.retryText}>Retry Microphone</Text>
+                </TouchableOpacity>
+            )}
         </KeyboardAvoidingView>
     );
 }
@@ -68,33 +104,32 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 24
     },
+    debugHeader: {
+        position: 'absolute',
+        top: 60,
+        alignItems: 'center',
+    },
+    debugText: {
+        color: '#444',
+        fontSize: 10,
+        fontWeight: 'bold',
+    },
     title: {
         fontSize: 28,
         fontWeight: 'bold',
         color: '#fff',
         marginBottom: 20
     },
-    errorBox: {
-        backgroundColor: 'rgba(255,59,48,0.1)',
-        padding: 12,
-        borderRadius: 8,
-        marginBottom: 20,
-        alignItems: 'center'
-    },
     errorText: {
         color: '#FF3B30',
-        fontSize: 14,
-        marginBottom: 4
-    },
-    retryText: {
-        color: '#007AFF',
-        fontWeight: 'bold'
+        fontSize: 12,
+        marginTop: 4,
     },
     transcriptContainer: {
         backgroundColor: '#1c1c1e',
         padding: 24,
-        borderRadius: 16,
-        marginBottom: 40,
+        borderRadius: 24,
+        marginBottom: 32,
         width: '100%',
         minHeight: 180,
         borderWidth: 1,
@@ -109,24 +144,56 @@ const styles = StyleSheet.create({
         height: '100%',
         paddingTop: 0,
     },
-    pulseIndicator: {
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        backgroundColor: 'rgba(0,122,255,0.2)',
-        marginBottom: 40
-    },
-    stopButton: {
-        paddingVertical: 16,
-        paddingHorizontal: 60,
-        borderRadius: 30,
-        backgroundColor: '#007AFF', // Changed to blue to signal "Proceed"
+    visualizerContainer: {
+        flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
+        height: 60,
+        marginBottom: 40,
+        gap: 6,
+    },
+    visualizerBar: {
+        width: 4,
+        backgroundColor: '#007AFF',
+        borderRadius: 2,
+    },
+    stopButton: {
+        paddingVertical: 18,
+        paddingHorizontal: 50,
+        borderRadius: 35,
+        backgroundColor: '#007AFF',
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#007AFF',
+        shadowOpacity: 0.4,
+        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 4 }
     },
     stopText: {
         color: '#fff',
         fontSize: 20,
         fontWeight: 'bold'
+    },
+    retryButton: {
+        marginTop: 20,
+        padding: 10,
+    },
+    retryText: {
+        color: '#007AFF',
+        fontWeight: '600',
+    },
+    warningBox: {
+        position: 'absolute',
+        top: 20,
+        backgroundColor: '#FF9500',
+        padding: 15,
+        borderRadius: 12,
+        margin: 20,
+        zIndex: 100,
+    },
+    warningText: {
+        color: '#000',
+        fontWeight: 'bold',
+        textAlign: 'center',
     },
 });

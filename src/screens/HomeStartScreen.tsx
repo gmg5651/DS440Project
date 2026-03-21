@@ -10,7 +10,6 @@ export default function HomeStartScreen() {
 
     const handleStart = () => {
         resetFlow();
-        startRecording();
         router.push('/recording');
     };
 

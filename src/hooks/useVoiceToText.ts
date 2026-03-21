@@ -18,71 +18,67 @@ export function useVoiceToText() {
                 recog.lang = 'en-US';
 
                 recog.onresult = (event: any) => {
-                    let finalTranscript = '';
-                    let interimTranscript = '';
-
-                    for (let i = event.resultIndex; i < event.results.length; ++i) {
-                        if (event.results[i].isFinal) {
-                            finalTranscript += event.results[i][0].transcript;
-                        } else {
-                            interimTranscript += event.results[i][0].transcript;
-                        }
+                    let text = '';
+                    for (let i = 0; i < event.results.length; i++) {
+                        text += event.results[i][0].transcript;
                     }
-
-                    const current = finalTranscript || interimTranscript;
-                    if (current.trim()) {
-                        setTranscript(current);
+                    console.log('[DEBUG] Speech Recognition Result:', text);
+                    if (text.trim()) {
+                        setTranscript(text);
                     }
                 };
 
                 recog.onstart = () => {
+                    console.log('[DEBUG] Speech Recognition Started');
                     setStatus('listening');
                     setError(null);
                 };
 
                 recog.onend = () => {
-                    // Only set to done if we were listening
-                    setStatus(prev => prev === 'listening' ? 'done' : prev);
+                    console.log('[DEBUG] Speech Recognition Ended');
                 };
 
                 recog.onerror = (event: any) => {
-                    console.error('Speech recognition error', event.error);
+                    console.error('[DEBUG] Speech Recognition Error:', event.error);
+                    setError(event.error);
                     if (event.error === 'not-allowed') {
-                        setError('Microphone permission denied');
-                    } else if (event.error === 'no-speech') {
-                        // ignore
-                    } else {
-                        setError(`Error: ${event.error}`);
+                        setStatus('error');
                     }
-                    setStatus('error');
                 };
 
                 recognitionRef.current = recog;
+            } else {
+                console.warn('[DEBUG] Speech Recognition NOT supported');
+                setError('browser-unsupported');
             }
         }
     }, []);
 
     const startRecording = useCallback(() => {
+        console.log('[DEBUG] startRecording() called');
         setTranscript('');
         setError(null);
         if (recognitionRef.current) {
             try {
                 recognitionRef.current.start();
                 setStatus('listening');
-            } catch (e) {
-                console.error('Failed to start recognition', e);
+            } catch (e: any) {
+                console.warn('[DEBUG] start() failed:', e.message);
+                // If already started, just set status
             }
         } else {
+            console.warn('[DEBUG] No recognition instance available');
             setStatus('listening');
         }
     }, []);
 
     const stopRecording = useCallback(() => {
+        console.log('[DEBUG] stopRecording() called');
         if (recognitionRef.current) {
             try {
                 recognitionRef.current.stop();
-            } catch (e) {
-                console.error('Failed to stop recognition', e);
+            } catch (e: any) {
+                console.warn('[DEBUG] stop() failed:', e.message);
             }
         }
         setStatus('done');
