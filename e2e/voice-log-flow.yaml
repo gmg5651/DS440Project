@@ -1,0 +1,7 @@
+appId: com.swiftulin
+---
+- launchApp
+- tapOn: { id: "btn-start-recording" }
+- assertVisible: "Listening..."
+- tapOn: { id: "btn-stop-recording" }
+- assertVisible: "Verification"
