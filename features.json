@@ -6,16 +6,17 @@
             "description": "User can tap to record voice which gets transcribed to text.",
             "uiElements": [
                 "Start Recording Button (Microphone)",
-                "Transcription Text Area (Editable)",
-                "Bottom Navigation (Home, Stats, Profile)"
+                "Transcription Text Area (Editable/Fallback)",
+                "Visualizer Bars (Audio Feedback)"
             ],
             "implementationFiles": [
-                "/src/components/VoiceInput.tsx",
-                "/src/hooks/useVoiceToText.ts"
+                "/src/screens/HomeRecordingScreen.tsx",
+                "/src/hooks/useVoiceToText.ts",
+                "/src/hooks/useAudioLevel.ts"
             ],
             "testFiles": [
-                "/src/__tests__/VoiceInput.test.tsx",
-                "/e2e/voice-input.yaml"
+                "/src/__tests__/HomeRecordingScreen.test.tsx",
+                "/src/__tests__/useVoiceToText.test.ts"
             ]
         },
         {
@@ -24,16 +25,16 @@
             "description": "Extract carbs and glucose from text. Allow user to verify before calculation.",
             "uiElements": [
                 "Verification List (Foods & Carbs)",
-                "Total Glucose Display",
-                "Settings Reminder Text"
+                "Glucose Detection Banner",
+                "Generic Food Fallback"
             ],
             "implementationFiles": [
-                "/src/components/VerificationList.tsx",
+                "/src/screens/HomeResultsScreen.tsx",
                 "/src/utils/nlpExtractor.ts"
             ],
             "testFiles": [
                 "/src/__tests__/nlpExtractor.test.ts",
-                "/src/__tests__/VerificationList.test.tsx"
+                "/src/__tests__/HomeResultsScreen.test.tsx"
             ]
         },
         {
@@ -41,73 +42,70 @@
             "name": "Insulin Calculation Breakdown",
             "description": "Calculate and display meal and correction doses with transparent math.",
             "uiElements": [
-                "Meal Dose Detail",
-                "Correction Dose Detail",
-                "Total Dose Display",
-                "Confirm Dose Button"
+                "Meal Dose Math Detail",
+                "Correction Dose Math Detail",
+                "Automatic Total Dose",
+                "Confirmation Modal"
             ],
             "implementationFiles": [
-                "/src/components/DoseModal.tsx",
+                "/src/screens/DoseModal.tsx",
                 "/src/utils/insulinCalculator.ts"
             ],
             "testFiles": [
                 "/src/__tests__/insulinCalculator.test.ts",
-                "/src/__tests__/DoseModal.test.tsx",
-                "/e2e/dose-calculation.yaml"
+                "/src/__tests__/DoseModal.test.tsx"
             ]
         },
         {
             "id": "F-004",
-            "name": "Manual Carb Entry",
-            "description": "Allow manual input of carbohydrates as a fallback or quick add.",
+            "name": "Manual Entry Flow",
+            "description": "Unified workflow for manual food/glucose entry from Home or Recording screens.",
             "uiElements": [
-                "Carbohydrate Number Input",
-                "Save/Add Carbs Button"
+                "Home 'Manual Entry' Button",
+                "Recording 'Type Instead' Input",
+                "Manual Entry Dialog/Screen"
             ],
             "implementationFiles": [
-                "/src/components/ManualCarbModal.tsx"
+                "/src/screens/ManualCarbModal.tsx"
             ],
             "testFiles": [
-                "/src/__tests__/ManualCarbModal.test.tsx",
-                "/e2e/manual-carb-entry.yaml"
+                "/src/__tests__/ManualCarbModal.test.tsx"
             ]
         },
         {
             "id": "F-005",
-            "name": "Medical Settings Configuration",
-            "description": "Set and securely store ICR, ISF, and target glucose.",
+            "name": "Medical Settings Profile",
+            "description": "Securely manage ICR, ISF, and target glucose with persistent storage.",
             "uiElements": [
-                "Medical Settings Section",
-                "ICR Input",
-                "ISF Input",
-                "Target Glucose Input",
-                "Save Settings Button"
+                "Profile/Settings Screen",
+                "Encrypted Storage Integration",
+                "Web localStorage Fallback"
             ],
             "implementationFiles": [
-                "/src/components/MedicalSettingsList.tsx",
-                "/src/store/settingsStore.ts"
+                "/src/screens/ProfileSettingsScreen.tsx",
+                "/src/store/settingsStore.ts",
+                "/src/store/settings.native.ts"
             ],
             "testFiles": [
                 "/src/__tests__/settingsStore.test.ts",
-                "/e2e/settings-update.yaml"
+                "/src/__tests__/ProfileSettingsScreen.test.tsx"
             ]
         },
         {
             "id": "F-006",
-            "name": "Daily Trends Dashboard",
-            "description": "View past 7 days of averages for glucose, carbs, and insulin.",
+            "name": "Unified Offline Infrastructure",
+            "description": "Universal database and storage layer supporting both Native and Web.",
             "uiElements": [
-                "Average Glucose Metric",
-                "Total Carbs Metric",
-                "Total Insulin Metric",
-                "Period Summary Graph/Chart"
+                "Progressive Web Demo support",
+                "Native SQLite persistence"
             ],
             "implementationFiles": [
-                "/src/components/DailyTrends.tsx",
-                "/src/hooks/useStats.ts"
+                "/src/db/index.ts",
+                "/src/db/sqlite.native.ts",
+                "/src/db/sqlite.ts"
             ],
             "testFiles": [
-                "/src/__tests__/DailyTrends.test.tsx"
+                "/src/__tests__/db.test.ts"
             ]
         }
     ]
