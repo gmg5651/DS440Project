@@ -19,7 +19,10 @@ export default function HomeStartScreen() {
                 style={styles.settingsHeaderBtn}
                 onPress={() => router.push('/settings')}
             >
-                <Text style={styles.settingsIcon}>⚙️</Text>
+                <View style={styles.settingsBadge}>
+                    <Text style={styles.settingsIcon}>⚙️</Text>
+                    <Text style={styles.settingsText}>Ratios</Text>
+                </View>
             </TouchableOpacity>
 
             <Text style={styles.title}>Swiftulin</Text>
@@ -32,12 +35,20 @@ export default function HomeStartScreen() {
                 <Text style={styles.micIcon}>🎙️</Text>
             </TouchableOpacity>
 
+            <Text style={styles.micLabel}>Tap to speak your meal</Text>
+
             <TouchableOpacity
                 style={styles.manualButton}
                 onPress={() => router.push('/manual-carb')}>
                 <Text style={styles.manualText}>⌨️ Manual Entry</Text>
             </TouchableOpacity>
 
+            <View style={styles.examplesContainer}>
+                <Text style={styles.examplesTitle}>Try saying things like:</Text>
+                <Text style={styles.exampleText}>• "I had two slices of pizza and a salad"</Text>
+                <Text style={styles.exampleText}>• "One large apple and a cup of milk"</Text>
+                <Text style={styles.exampleText}>• "1.5 oranges and 10 oz of juice"</Text>
+            </View>
         </View>
     );
 }
@@ -53,11 +64,26 @@ const styles = StyleSheet.create({
     settingsHeaderBtn: {
         position: 'absolute',
         top: 60,
-        right: 24,
-        padding: 10,
+        right: 20,
+    },
+    settingsBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#1c1c1e',
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#3a3a3c',
     },
     settingsIcon: {
-        fontSize: 24,
+        fontSize: 18,
+    },
+    settingsText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: 'bold',
+        marginLeft: 6,
     },
     title: {
         fontSize: 48,
@@ -87,12 +113,20 @@ const styles = StyleSheet.create({
     micIcon: {
         fontSize: 50,
     },
+    micLabel: {
+        color: '#007AFF',
+        fontSize: 14,
+        fontWeight: '600',
+        marginBottom: 60,
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+    },
     manualButton: {
         paddingVertical: 15,
         paddingHorizontal: 30,
         borderRadius: 30,
         backgroundColor: '#1c1c1e',
-        marginBottom: 20,
+        marginBottom: 40,
         borderWidth: 1,
         borderColor: '#3a3a3c',
     },
@@ -100,5 +134,26 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 18,
         fontWeight: '600',
+    },
+    examplesContainer: {
+        width: '100%',
+        backgroundColor: '#1c1c1e',
+        padding: 24,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#2c2c2e',
+    },
+    examplesTitle: {
+        color: '#aaa',
+        fontSize: 14,
+        fontWeight: 'bold',
+        marginBottom: 12,
+        textTransform: 'uppercase',
+    },
+    exampleText: {
+        color: '#666',
+        fontSize: 15,
+        marginBottom: 8,
+        fontStyle: 'italic',
     },
 });
