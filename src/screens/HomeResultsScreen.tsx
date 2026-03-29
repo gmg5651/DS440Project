@@ -1,17 +1,24 @@
 import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator, TextInput } from 'react-native';
 import { useFlowStore, FinalFoodItem } from '@/store/flowStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { segmentMeal } from '@/utils/nlpExtractor';
 import { searchFood, getFoodDetails, parseNaturalLanguage } from '@/services/fatSecretService';
 import { router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 
 export default function HomeResultsScreen() {
+    const settings = useSettingsStore();
     const {
         transcript, segments, setSegments,
         finalItems, setFinalItems, updateItemQuantity,
-        glucose, setGlucose
+        glucose, setGlucose,
+        icr, setIcr
     } = useFlowStore();
+
+    // Determine values to show (session override or global setting)
+    const displayGlucose = glucose !== null ? glucose : settings.targetGlucose;
+    const displayIcr = icr !== null ? icr : settings.icr;
 
     useEffect(() => {
         if (transcript && segments.length === 0) {
@@ -96,44 +103,65 @@ export default function HomeResultsScreen() {
                     <Text style={styles.loadingText}>Fetching nutritional data...</Text>
                 </View>
             ) : (
-                <FlatList
-                    data={finalItems}
-                    keyExtractor={(item, index) => index.toString()}
-                    renderItem={({ item, index }) => (
-                        <View style={styles.card}>
-                            <View style={styles.info}>
-                                <Text style={styles.foodName}>{item.name}</Text>
-                                <Text style={styles.carbs}>{Math.round(item.carbsG)}g Carbs</Text>
-                            </View>
+                <>
+                    <FlatList
+                        data={finalItems}
+                        keyExtractor={(item, index) => index.toString()}
+                        renderItem={({ item, index }) => (
+                            <View style={styles.card}>
+                                <View style={styles.info}>
+                                    <Text style={styles.foodName}>{item.name}</Text>
+                                    <Text style={styles.carbs}>{Math.round(item.carbsG)}g Carbs</Text>
+                                </View>
 
-                            <View style={styles.qtyContainer}>
-                                <TouchableOpacity
-                                    onPress={() => updateItemQuantity(index, Math.max(0.5, item.quantity - 0.5))}
-                                    style={styles.qtyBtn}
-                                >
-                                    <Text style={styles.qtyBtnText}>-</Text>
-                                </TouchableOpacity>
-                                <Text style={styles.qtyText}>{item.quantity}</Text>
-                                <TouchableOpacity
-                                    onPress={() => updateItemQuantity(index, item.quantity + 0.5)}
-                                    style={styles.qtyBtn}
-                                >
-                                    <Text style={styles.qtyBtnText}>+</Text>
-                                </TouchableOpacity>
+                                <View style={styles.qtyContainer}>
+                                    <TouchableOpacity
+                                        onPress={() => updateItemQuantity(index, Math.max(0.5, item.quantity - 0.5))}
+                                        style={styles.qtyBtn}
+                                    >
+                                        <Text style={styles.qtyBtnText}>-</Text>
+                                    </TouchableOpacity>
+                                    <Text style={styles.qtyText}>{item.quantity}</Text>
+                                    <TouchableOpacity
+                                        onPress={() => updateItemQuantity(index, item.quantity + 0.5)}
+                                        style={styles.qtyBtn}
+                                    >
+                                        <Text style={styles.qtyBtnText}>+</Text>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
+                        )}
+                        ListEmptyComponent={
+                            <Text style={styles.emptyText}>No food items detected. Try manual entry?</Text>
+                        }
+                        style={styles.list}
+                    />
+
+                    <View style={styles.overrideSection}>
+                        <View style={styles.overrideItem}>
+                            <Text style={styles.overrideLabel}>Glucose (mg/dL)</Text>
+                            <TextInput
+                                style={styles.overrideInput}
+                                keyboardType="numeric"
+                                placeholder={settings.targetGlucose.toString()}
+                                value={glucose !== null ? glucose.toString() : settings.targetGlucose.toString()}
+                                onChangeText={(val) => setGlucose(val === '' ? null : parseFloat(val))}
+                                placeholderTextColor="#444"
+                            />
                         </View>
-                    )}
-                    ListEmptyComponent={
-                        <Text style={styles.emptyText}>No food items detected. Try manual entry?</Text>
-                    }
-                />
-            )}
-
-            {glucose && !isFetching && (
-                <View style={styles.glucoseCard}>
-                    <Text style={styles.glucoseLabel}>Glucose</Text>
-                    <Text style={styles.glucoseValue}>{glucose} mg/dL</Text>
-                </View>
+                        <View style={styles.overrideItem}>
+                            <Text style={styles.overrideLabel}>ICR (g/Unit)</Text>
+                            <TextInput
+                                style={styles.overrideInput}
+                                keyboardType="numeric"
+                                placeholder={settings.icr.toString()}
+                                value={icr !== null ? icr.toString() : settings.icr.toString()}
+                                onChangeText={(val) => setIcr(val === '' ? null : parseFloat(val))}
+                                placeholderTextColor="#444"
+                            />
+                        </View>
+                    </View>
+                </>
             )}
 
             <TouchableOpacity
@@ -171,6 +199,18 @@ const styles = StyleSheet.create({
     glucoseLabel: { fontSize: 18, color: '#fff' },
     glucoseValue: { fontSize: 18, color: '#34C759', fontWeight: 'bold' },
     emptyText: { color: '#666', textAlign: 'center', marginTop: 40, fontSize: 16 },
+    list: { flex: 1 },
+    overrideSection: {
+        flexDirection: 'row', justifyContent: 'space-between',
+        backgroundColor: '#1c1c1e', padding: 16, borderRadius: 16,
+        marginTop: 12, marginBottom: 12, borderWidth: 1, borderColor: '#2c2c2e'
+    },
+    overrideItem: { flex: 1, alignItems: 'center' },
+    overrideLabel: { fontSize: 12, color: '#aaa', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 1 },
+    overrideInput: {
+        fontSize: 22, color: '#007AFF', fontWeight: 'bold',
+        textAlign: 'center', minWidth: 60, padding: 4
+    },
     calcButton: {
         backgroundColor: '#007AFF', padding: 18, borderRadius: 16,
         alignItems: 'center', marginTop: 10, marginBottom: 30,

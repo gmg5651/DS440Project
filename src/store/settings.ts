@@ -4,9 +4,15 @@ interface SettingsState {
     icr: number;
     isf: number;
     targetGlucose: number;
+    isfThreshold: number; // Only correct if above this
+    maxDose: number;      // Safety cap
+    roundingMode: 'none' | 'half' | 'whole';
     setIcr: (v: number) => void;
     setIsf: (v: number) => void;
     setTargetGlucose: (v: number) => void;
+    setIsfThreshold: (v: number) => void;
+    setMaxDose: (v: number) => void;
+    setRoundingMode: (v: 'none' | 'half' | 'whole') => void;
     loadFromSecureStore: () => Promise<void>;
     saveToSecureStore: () => Promise<void>;
 }
@@ -15,9 +21,15 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     icr: 10,
     isf: 50,
     targetGlucose: 100,
+    isfThreshold: 150,
+    maxDose: 15,
+    roundingMode: 'half',
     setIcr: (v) => set({ icr: v }),
     setIsf: (v) => set({ isf: v }),
     setTargetGlucose: (v) => set({ targetGlucose: v }),
+    setIsfThreshold: (v) => set({ isfThreshold: v }),
+    setMaxDose: (v) => set({ maxDose: v }),
+    setRoundingMode: (v) => set({ roundingMode: v }),
     loadFromSecureStore: async () => {
         if (typeof window !== 'undefined') {
             const raw = localStorage.getItem('swiftulin_settings');
@@ -26,8 +38,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     },
     saveToSecureStore: async () => {
         if (typeof window !== 'undefined') {
-            const { icr, isf, targetGlucose } = get();
-            localStorage.setItem('swiftulin_settings', JSON.stringify({ icr, isf, targetGlucose }));
+            const { icr, isf, targetGlucose, isfThreshold, maxDose, roundingMode } = get();
+            localStorage.setItem('swiftulin_settings', JSON.stringify({ icr, isf, targetGlucose, isfThreshold, maxDose, roundingMode }));
         }
     },
 }));

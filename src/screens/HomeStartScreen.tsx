@@ -15,6 +15,13 @@ export default function HomeStartScreen() {
 
     return (
         <View style={styles.container}>
+            <TouchableOpacity
+                style={styles.settingsHeaderBtn}
+                onPress={() => router.push('/settings')}
+            >
+                <Text style={styles.settingsIcon}>⚙️</Text>
+            </TouchableOpacity>
+
             <Text style={styles.title}>Swiftulin</Text>
             <Text style={styles.subtitle}>Tap to log a meal or dose</Text>
 
@@ -31,11 +38,13 @@ export default function HomeStartScreen() {
                 <Text style={styles.manualText}>⌨️ Manual Entry</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-                style={styles.statsButton}
-                onPress={() => router.push('/stats')}>
-                <Text style={styles.statsIcon}>📊 View Stats</Text>
-            </TouchableOpacity>
+            <View style={styles.footerRow}>
+                <TouchableOpacity
+                    style={styles.statsButton}
+                    onPress={() => router.push('/stats')}>
+                    <Text style={styles.statsIconText}>📊 View Stats</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 }
@@ -47,6 +56,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         padding: 20,
+    },
+    settingsHeaderBtn: {
+        position: 'absolute',
+        top: 60,
+        right: 24,
+        padding: 10,
+    },
+    settingsIcon: {
+        fontSize: 24,
     },
     title: {
         fontSize: 48,
@@ -90,12 +108,16 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '600',
     },
+    footerRow: {
+        flexDirection: 'row',
+        marginTop: 20,
+    },
     statsButton: {
         flexDirection: 'row',
         alignItems: 'center',
         padding: 10,
     },
-    statsIcon: {
+    statsIconText: {
         fontSize: 18,
         color: '#007AFF',
         fontWeight: '600',

@@ -8,22 +8,26 @@ import { db } from '@/db';
 import { mealLogs, glucoseLogs, doseLogs } from '@/db/schema';
 
 export default function DoseModal() {
-    const { finalItems, glucose, resetFlow } = useFlowStore();
+    const { finalItems, glucose, icr: icrOverride, resetFlow } = useFlowStore();
     const settings = useSettingsStore();
 
     const dose = useMemo(() => {
         if (finalItems.length === 0) return null;
         const totalCarbsG = finalItems.reduce((sum, i) => sum + i.carbsG, 0);
+        // Use provided glucose or fallback to target (no correction)
         const glucoseMgDl = glucose || settings.targetGlucose;
 
         return calculateDose({
             totalCarbsG,
             glucoseMgDl,
-            icr: settings.icr,
+            icr: icrOverride || settings.icr,
             isf: settings.isf,
             targetGlucose: settings.targetGlucose,
+            isfThreshold: settings.isfThreshold,
+            maxDose: settings.maxDose,
+            roundingMode: settings.roundingMode,
         });
-    }, [finalItems, glucose, settings]);
+    }, [finalItems, glucose, icrOverride, settings]);
 
     const handleConfirm = async () => {
         if (!dose || finalItems.length === 0) return;
@@ -40,7 +44,7 @@ export default function DoseModal() {
                 });
             }
 
-            // 2. Save glucose if present
+            // 2. Save glucose if present (don't save if it was just fallback)
             if (glucose) {
                 await db.insert(glucoseLogs).values({
                     glucoseMgDl: glucose,
@@ -69,44 +73,76 @@ export default function DoseModal() {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Dose Breakdown</Text>
+            <Text style={styles.title}>Insulin Recommendation</Text>
 
-            <View style={styles.row}>
-                <Text style={styles.label}>Meal Dose</Text>
-                <Text style={styles.value}>{dose.mealDose.toFixed(1)} U</Text>
+            <View style={styles.card}>
+                <View style={styles.row}>
+                    <Text style={styles.label}>Meal Dose</Text>
+                    <Text style={styles.value}>{dose.mealDose.toFixed(2)} U</Text>
+                </View>
+                <View style={styles.row}>
+                    <Text style={styles.label}>Correction Dose</Text>
+                    <Text style={styles.value}>{dose.correctionDose.toFixed(2)} U</Text>
+                </View>
+
+                <View style={styles.divider} />
+
+                <View style={styles.totalRow}>
+                    <View>
+                        <Text style={styles.labelTotal}>Total Dose</Text>
+                        {settings.roundingMode !== 'none' && (
+                            <Text style={styles.subtext}>Rounded to nearest {settings.roundingMode}</Text>
+                        )}
+                    </View>
+                    <Text style={styles.valueTotal}>{dose.totalDose.toFixed(settings.roundingMode === 'none' ? 2 : 1)} U</Text>
+                </View>
             </View>
-            <View style={styles.row}>
-                <Text style={styles.label}>Correction Dose</Text>
-                <Text style={styles.value}>{dose.correctionDose.toFixed(1)} U</Text>
-            </View>
-            <View style={[styles.row, styles.totalRow]}>
-                <Text style={styles.labelTotal}>Total</Text>
-                <Text style={styles.valueTotal}>{dose.totalDose.toFixed(1)} U</Text>
-            </View>
+
+            {dose.isCapped && (
+                <View style={styles.warningBox}>
+                    <Text style={styles.warningText}>
+                        ⚠️ Safety Cap Applied: Dose limited to your maximum of {settings.maxDose} units.
+                    </Text>
+                </View>
+            )}
 
             <TouchableOpacity
                 style={styles.confirmButton}
                 testID="btn-confirm-dose"
                 onPress={handleConfirm}
             >
-                <Text style={styles.confirmText}>Confirm Dose</Text>
+                <Text style={styles.confirmText}>Log Dose</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => router.push('/settings')}
+            >
+                <Text style={styles.cancelText}>Check Settings</Text>
             </TouchableOpacity>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#1E1E1E', padding: 24, justifyContent: 'center' },
-    title: { fontSize: 24, fontWeight: 'bold', color: '#fff', marginBottom: 32, textAlign: 'center' },
+    container: { flex: 1, backgroundColor: '#0a0a0a', padding: 24, justifyContent: 'center' },
+    title: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: 32, textAlign: 'center' },
+    card: { backgroundColor: '#1c1c1e', padding: 24, borderRadius: 20, marginBottom: 24, borderWidth: 1, borderColor: '#2c2c2e' },
     row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
     label: { fontSize: 18, color: '#aaa' },
     value: { fontSize: 18, color: '#fff', fontWeight: 'bold' },
-    totalRow: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#333' },
+    divider: { height: 1, backgroundColor: '#2c2c2e', marginVertical: 8 },
+    totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 },
     labelTotal: { fontSize: 22, color: '#fff', fontWeight: 'bold' },
-    valueTotal: { fontSize: 22, color: '#007AFF', fontWeight: 'bold' },
+    subtext: { fontSize: 12, color: '#666', marginTop: 2 },
+    valueTotal: { fontSize: 32, color: '#007AFF', fontWeight: 'bold' },
+    warningBox: { backgroundColor: 'rgba(255, 149, 0, 0.1)', padding: 16, borderRadius: 12, borderLeftWidth: 4, borderLeftColor: '#FF9500', marginBottom: 24 },
+    warningText: { color: '#FF9500', fontWeight: '600', fontSize: 14 },
     confirmButton: {
-        backgroundColor: '#34C759', padding: 18, borderRadius: 12,
-        alignItems: 'center', marginTop: 48
+        backgroundColor: '#34C759', padding: 20, borderRadius: 16,
+        alignItems: 'center', shadowColor: '#34C759', shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }
     },
-    confirmText: { color: '#fff', fontSize: 18, fontWeight: 'bold' }
+    confirmText: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
+    cancelButton: { padding: 16, alignItems: 'center', marginTop: 12 },
+    cancelText: { color: '#666', fontSize: 16 }
 });

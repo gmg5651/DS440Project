@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { db } from '@/db';
 import { glucoseLogs, mealLogs, doseLogs } from '@/db/schema';
-import { desc, sql } from 'drizzle-orm';
+import { desc, sql, gte } from 'drizzle-orm';
 
 export default function StatsScreen() {
     const [stats, setStats] = useState({ avgGlucose: 0, totalInsulin: 0, totalCarbs: 0 });
@@ -11,9 +11,20 @@ export default function StatsScreen() {
         let isMounted = true;
         async function loadStats() {
             try {
-                const glucoseResult = await db.select({ avg: sql<number>`avg(${glucoseLogs.glucoseMgDl})` }).from(glucoseLogs);
-                const doseResult = await db.select({ sum: sql<number>`sum(${doseLogs.totalUnits})` }).from(doseLogs);
-                const carbResult = await db.select({ sum: sql<number>`sum(${mealLogs.carbsG})` }).from(mealLogs);
+                const now = Date.now();
+                const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+
+                const glucoseResult = await db.select({ avg: sql<number>`avg(${glucoseLogs.glucoseMgDl})` })
+                    .from(glucoseLogs)
+                    .where(gte(glucoseLogs.createdAt, sevenDaysAgo));
+
+                const doseResult = await db.select({ sum: sql<number>`sum(${doseLogs.totalUnits})` })
+                    .from(doseLogs)
+                    .where(gte(doseLogs.createdAt, sevenDaysAgo));
+
+                const carbResult = await db.select({ sum: sql<number>`sum(${mealLogs.carbsG})` })
+                    .from(mealLogs)
+                    .where(gte(mealLogs.createdAt, sevenDaysAgo));
 
                 if (isMounted) {
                     setStats({
