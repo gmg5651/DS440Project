@@ -5,21 +5,23 @@ import { useFlowStore } from '@/store/flowStore';
 
 export default function ManualCarbModal() {
     const [carbs, setCarbs] = useState('');
-    const [glucose, setGlucose] = useState('');
-    const setExtraction = useFlowStore(state => state.setExtraction);
+    const [glucoseInput, setGlucoseInput] = useState('');
+    const { setFinalItems, setGlucose } = useFlowStore();
 
     const handleSave = () => {
         const carbNum = parseInt(carbs, 10);
-        const glucoseNum = parseInt(glucose, 10);
+        const glucoseNum = parseInt(glucoseInput, 10);
 
         if (isNaN(carbNum)) return;
 
-        // Simulate an NLP extraction object from manual input
-        setExtraction({
-            items: [{ name: 'Manual Entry', carbsG: carbNum }],
-            glucose: isNaN(glucoseNum) ? null : glucoseNum,
-            confidence: 1.0,
-        });
+        // Directly set final items and glucose for manual entry
+        setFinalItems([{
+            name: 'Manual Entry',
+            carbsG: carbNum,
+            quantity: 1,
+            baseCarbsG: carbNum
+        }]);
+        setGlucose(isNaN(glucoseNum) ? null : glucoseNum);
 
         router.push('/results');
     };
@@ -46,8 +48,8 @@ export default function ManualCarbModal() {
                 keyboardType="numeric"
                 placeholder="e.g. 150"
                 placeholderTextColor="#666"
-                value={glucose}
-                onChangeText={setGlucose}
+                value={glucoseInput}
+                onChangeText={setGlucoseInput}
             />
 
             <TouchableOpacity

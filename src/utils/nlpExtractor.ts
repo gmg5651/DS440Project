@@ -1,62 +1,79 @@
-export interface FoodItem { name: string; carbsG: number; }
+export interface FoodSegment {
+    name: string;
+    quantity: number;
+    originalText: string;
+}
+
 export interface ExtractionResult {
-    items: FoodItem[];
+    segments: FoodSegment[];
     glucose: number | null;
     confidence: number;
 }
 
-// Phase 1: curated regex lookup. Replace with API call when online.
-const FOOD_DB: Record<string, number> = {
-    'pizza slice': 26,
-    'soda': 23,
-    'apple': 25,
-    'banana': 27,
-    'rice cup': 45,
-    'taco': 18,
-    'bread': 15,
+const NUMBER_WORDS: Record<string, number> = {
+    'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
+    'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10
 };
 
-export function extractMealData(utterance: string): ExtractionResult {
+export function segmentMeal(utterance: string): ExtractionResult {
     const lower = utterance.toLowerCase().trim();
-    if (!lower) return { items: [], glucose: null, confidence: 0 };
+    if (!lower || lower.length < 3) return { segments: [], glucose: null, confidence: 0 };
 
-    const items: FoodItem[] = [];
+    const segments: FoodSegment[] = [];
     let glucose: number | null = null;
-    let isDbMatch = false;
 
-    // Extract glucose
+    // 1. Extract glucose
     const glucoseMatch = lower.match(/(?:glucose|sugar|level)\s+(?:is\s+)?(\d+)/) || lower.match(/(\d+)\s+(?:mg\/dl|mgdl)/);
     if (glucoseMatch) glucose = parseInt(glucoseMatch[1]);
 
-    // Extract food items from DB
-    for (const [key, carbs] of Object.entries(FOOD_DB)) {
-        const keyword = key.split(' ')[0];
-        const quantityMatch = lower.match(new RegExp(`(\\d+)\\s+(?:slice[s]?\\s+of\\s+)?${keyword}`));
+    // 2. Advanced Segmentation: split by number words AND delimiters
+    // Pattern matches numbers/quantities as potential new segment starts
+    // e.g. "three tacos one tomato" -> ["three tacos", "one tomato"]
+    const numberPattern = '\\b(?:\\d+|one|two|three|four|five|six|seven|eight|nine|ten|a|an|some)\\b';
+    const splitRegex = new RegExp(`(?=${numberPattern}\\s+)|\\s+and\\s+|,|\\s+with\\s+`, 'g');
 
-        if (lower.includes(keyword)) {
-            const qty = quantityMatch ? parseInt(quantityMatch[1]) : 1;
-            items.push({ name: key, carbsG: carbs * qty });
-            isDbMatch = true;
+    const parts = lower.split(splitRegex).filter(p => p.trim().length > 2);
+
+    for (const part of parts) {
+        let cleaned = part.trim();
+        if (cleaned.startsWith('i ate') || cleaned.startsWith('i had')) {
+            cleaned = cleaned.replace(/i\s+(?:ate|had)\s+/, '').trim();
+        }
+
+        // Remove glucose part
+        cleaned = cleaned.replace(/(?:glucose|sugar|level)\s+(?:is\s+)?\d+/, '').trim();
+        cleaned = cleaned.replace(/\d+\s+(?:mg\/dl|mgdl)/, '').trim();
+
+        // Skip if empty or just conversational filler
+        if (cleaned.length < 2 || cleaned === 'i had' || cleaned === 'i ate') continue;
+
+        const qtyMatch = cleaned.match(/^(\d+)\s+(.+)/);
+        const wordMatch = cleaned.match(/^(one|two|three|four|five|six|seven|eight|nine|ten)\s+(.+)/);
+
+        if (qtyMatch) {
+            segments.push({
+                quantity: parseInt(qtyMatch[1]),
+                name: qtyMatch[2].trim(),
+                originalText: cleaned
+            });
+        } else if (wordMatch) {
+            segments.push({
+                quantity: NUMBER_WORDS[wordMatch[1] as string],
+                name: wordMatch[2].trim(),
+                originalText: cleaned
+            });
+        } else {
+            const articleMatch = cleaned.match(/^(?:a|an|some)\s+(.+)/);
+            segments.push({
+                quantity: 1,
+                name: articleMatch ? articleMatch[1].trim() : cleaned,
+                originalText: cleaned
+            });
         }
     }
 
-    // Fallback: If no items found but text exists, treat the whole thing as a generic entry for the demo
-    let isFallback = false;
-    if (items.length === 0 && lower.length > 2) {
-        const leadQtyMatch = lower.match(/^(\d+)\s+(.+)/);
-        const name = leadQtyMatch ? leadQtyMatch[2] : lower;
-        const qty = leadQtyMatch ? parseInt(leadQtyMatch[1]) : 1;
+    let confidence = segments.length > 0 ? 0.9 : 0.1;
+    if (segments.length === 1 && segments[0].name.split(' ').length === 1) confidence = 0.3;
 
-        items.push({
-            name: name.substring(0, 30),
-            carbsG: 20 * qty
-        });
-        isFallback = true;
-    }
-
-    let confidence = 0.1;
-    if (isDbMatch || glucose !== null) confidence = 0.85;
-    else if (isFallback) confidence = 0.4;
-
-    return { items, glucose, confidence };
+    return { segments, glucose, confidence };
 }

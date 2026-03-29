@@ -3,14 +3,12 @@ import { View, Text, TouchableOpacity, StyleSheet, TextInput, KeyboardAvoidingVi
 import { useVoiceToText } from '@/hooks/useVoiceToText';
 import { useAudioLevel } from '@/hooks/useAudioLevel';
 import { useFlowStore } from '@/store/flowStore';
-import { extractMealData } from '@/utils/nlpExtractor';
 import { router } from 'expo-router';
 
 export default function HomeRecordingScreen() {
     const { status, transcript, setTranscript, error, stopRecording, startRecording } = useVoiceToText();
     const volume = useAudioLevel(status === 'listening');
     const setFlowTranscript = useFlowStore((state) => state.setTranscript);
-    const setExtraction = useFlowStore((state) => state.setExtraction);
     const resetFlow = useFlowStore((state) => state.resetFlow);
     const [isSecure, setIsSecure] = React.useState(true);
 
@@ -22,13 +20,6 @@ export default function HomeRecordingScreen() {
             setIsSecure(false);
         }
     }, []);
-
-    React.useEffect(() => {
-        if (transcript) {
-            const result = extractMealData(transcript);
-            setExtraction(result);
-        }
-    }, [transcript]);
 
     const handleStop = () => {
         stopRecording();

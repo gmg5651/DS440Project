@@ -8,13 +8,13 @@ import { db } from '@/db';
 import { mealLogs, glucoseLogs, doseLogs } from '@/db/schema';
 
 export default function DoseModal() {
-    const { extraction, resetFlow } = useFlowStore();
+    const { finalItems, glucose, resetFlow } = useFlowStore();
     const settings = useSettingsStore();
 
     const dose = useMemo(() => {
-        if (!extraction) return null;
-        const totalCarbsG = extraction.items.reduce((sum, i) => sum + i.carbsG, 0);
-        const glucoseMgDl = extraction.glucose || settings.targetGlucose;
+        if (finalItems.length === 0) return null;
+        const totalCarbsG = finalItems.reduce((sum, i) => sum + i.carbsG, 0);
+        const glucoseMgDl = glucose || settings.targetGlucose;
 
         return calculateDose({
             totalCarbsG,
@@ -23,16 +23,16 @@ export default function DoseModal() {
             isf: settings.isf,
             targetGlucose: settings.targetGlucose,
         });
-    }, [extraction, settings]);
+    }, [finalItems, glucose, settings]);
 
     const handleConfirm = async () => {
-        if (!dose || !extraction) return;
+        if (!dose || finalItems.length === 0) return;
 
         try {
             const now = Date.now();
 
             // 1. Save meal items
-            for (const item of extraction.items) {
+            for (const item of finalItems) {
                 await db.insert(mealLogs).values({
                     foodName: item.name,
                     carbsG: item.carbsG,
@@ -41,9 +41,9 @@ export default function DoseModal() {
             }
 
             // 2. Save glucose if present
-            if (extraction.glucose) {
+            if (glucose) {
                 await db.insert(glucoseLogs).values({
-                    glucoseMgDl: extraction.glucose,
+                    glucoseMgDl: glucose,
                     createdAt: now,
                 });
             }
@@ -59,7 +59,6 @@ export default function DoseModal() {
 
             resetFlow();
             router.replace('/');
-            // Alert.alert('Success', 'Dose logged successfully');
         } catch (error) {
             console.error('Failed to log dose:', error);
             Alert.alert('Error', 'Failed to save dose to database');

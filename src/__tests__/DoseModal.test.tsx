@@ -15,10 +15,8 @@ jest.mock('../store/settingsStore', () => ({
 
 test('renders dose breakdown and Confirm CTA', () => {
     (useFlowStore as any).mockReturnValue({
-        extraction: {
-            items: [{ name: 'Pizza', carbsG: 50 }],
-            glucose: 150,
-        },
+        finalItems: [{ name: 'Pizza', carbsG: 50, quantity: 1, baseCarbsG: 50 }],
+        glucose: 150,
         resetFlow: jest.fn(),
     });
 
@@ -26,4 +24,7 @@ test('renders dose breakdown and Confirm CTA', () => {
     expect(getByTestId('btn-confirm-dose')).toBeTruthy();
     expect(getByText(/Meal Dose/i)).toBeTruthy();
     expect(getByText(/Correction Dose/i)).toBeTruthy();
+    expect(getByText(/5.0 U/i)).toBeTruthy(); // 50 / 10
+    expect(getByText(/1.0 U/i)).toBeTruthy(); // (150-100) / 50
+    expect(getByText(/6.0 U/i)).toBeTruthy(); // 5 + 1
 });
