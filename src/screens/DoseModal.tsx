@@ -35,37 +35,14 @@ export default function DoseModal() {
         try {
             const now = Date.now();
 
-            // 1. Save meal items
-            for (const item of finalItems) {
-                await db.insert(mealLogs).values({
-                    foodName: item.name,
-                    carbsG: item.carbsG,
-                    createdAt: now,
-                });
-            }
-
-            // 2. Save glucose if present (don't save if it was just fallback)
-            if (glucose) {
-                await db.insert(glucoseLogs).values({
-                    glucoseMgDl: glucose,
-                    createdAt: now,
-                });
-            }
-
-            // 3. Save dose
-            await db.insert(doseLogs).values({
-                mealDoseUnits: dose.mealDose,
-                correctionDoseUnits: dose.correctionDose,
-                totalUnits: dose.totalDose,
-                confirmed: true,
-                createdAt: now,
-            });
+            // Data persistence removed as per user request (Privacy)
+            console.log('[DEBUG] Calculation Finished');
 
             resetFlow();
             router.replace('/');
         } catch (error) {
-            console.error('Failed to log dose:', error);
-            Alert.alert('Error', 'Failed to save dose to database');
+            console.error('Failed to complete dose:', error);
+            Alert.alert('Error', 'An unexpected error occurred.');
         }
     };
 
@@ -106,12 +83,16 @@ export default function DoseModal() {
                 </View>
             )}
 
+            <Text style={styles.disclaimer}>
+                ⚠️ NOTICE: Carbs and insulin doses can be wrong. These are suggestions only. Always verify calculations manually before dosing.
+            </Text>
+
             <TouchableOpacity
                 style={styles.confirmButton}
                 testID="btn-confirm-dose"
                 onPress={handleConfirm}
             >
-                <Text style={styles.confirmText}>Log Dose</Text>
+                <Text style={styles.confirmText}>Complete</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -138,6 +119,16 @@ const styles = StyleSheet.create({
     valueTotal: { fontSize: 32, color: '#007AFF', fontWeight: 'bold' },
     warningBox: { backgroundColor: 'rgba(255, 149, 0, 0.1)', padding: 16, borderRadius: 12, borderLeftWidth: 4, borderLeftColor: '#FF9500', marginBottom: 24 },
     warningText: { color: '#FF9500', fontWeight: '600', fontSize: 14 },
+    disclaimer: {
+        fontSize: 11,
+        color: '#FF3B30',
+        textAlign: 'center',
+        marginTop: 8,
+        marginBottom: 16,
+        paddingHorizontal: 20,
+        fontStyle: 'italic',
+        lineHeight: 16
+    },
     confirmButton: {
         backgroundColor: '#34C759', padding: 20, borderRadius: 16,
         alignItems: 'center', shadowColor: '#34C759', shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }

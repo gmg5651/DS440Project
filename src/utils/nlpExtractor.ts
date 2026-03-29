@@ -12,7 +12,8 @@ export interface ExtractionResult {
 
 const NUMBER_WORDS: Record<string, number> = {
     'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
-    'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10
+    'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10,
+    'half': 0.5, 'quarter': 0.25, 'third': 0.33, 'a': 1, 'an': 1
 };
 
 export function segmentMeal(utterance: string): ExtractionResult {
@@ -26,47 +27,80 @@ export function segmentMeal(utterance: string): ExtractionResult {
     const glucoseMatch = lower.match(/(?:glucose|sugar|level)\s+(?:is\s+)?(\d+)/) || lower.match(/(\d+)\s+(?:mg\/dl|mgdl)/);
     if (glucoseMatch) glucose = parseInt(glucoseMatch[1]);
 
-    // 2. Advanced Segmentation: split by number words AND delimiters
-    // Pattern matches numbers/quantities as potential new segment starts
-    // e.g. "three tacos one tomato" -> ["three tacos", "one tomato"]
-    const numberPattern = '\\b(?:\\d+|one|two|three|four|five|six|seven|eight|nine|ten|a|an|some)\\b';
-    const splitRegex = new RegExp(`(?=${numberPattern}\\s+)|\\s+and\\s+|,|\\s+with\\s+`, 'g');
+    // 2. Clear Delimiters: split by 'and', ',', 'with'
+    const delimiterPattern = /\s+and\s+|,|\s+with\s+/gi;
+    let initialParts = lower.split(delimiterPattern).map(p => p.trim()).filter(p => p.length > 2);
 
-    const parts = lower.split(splitRegex).filter(p => p.trim().length > 2);
+    // 3. Pre-process "of": e.g. "3/4 of a banana" -> "3/4 banana"
+    initialParts = initialParts.map(part => {
+        return part.replace(/(\d+(?:\/\d+|\.\d+)?|one|two|three|four|five|six|seven|eight|nine|ten)\s+of\b\s*(?:a|an|the)?\s*/i, '$1 ');
+    });
 
-    for (const part of parts) {
-        let cleaned = part.trim();
-        if (cleaned.startsWith('i ate') || cleaned.startsWith('i had')) {
-            cleaned = cleaned.replace(/i\s+(?:ate|had)\s+/, '').trim();
+    // 4. Refining segments: look for numbers that aren't at the start and split there too
+    // Note: We don't split on 'a' or 'an' here to avoid breaking articles
+    const numberPattern = /\b(\d+(?:\/\d+|\.\d+)?|one|two|three|four|five|six|seven|eight|nine|ten)\b/gi;
+    const finalParts: string[] = [];
+
+    for (const part of initialParts) {
+        let matches;
+        let lastIndex = 0;
+        const subParts: string[] = [];
+
+        while ((matches = numberPattern.exec(part)) !== null) {
+            if (matches.index > 0) {
+                subParts.push(part.substring(lastIndex, matches.index).trim());
+                lastIndex = matches.index;
+            }
         }
+        subParts.push(part.substring(lastIndex).trim());
+        finalParts.push(...subParts.filter(p => p.length > 2));
+    }
+
+    for (const part of finalParts) {
+        let cleaned = part.trim();
 
         // Remove glucose part
-        cleaned = cleaned.replace(/(?:glucose|sugar|level)\s+(?:is\s+)?\d+/, '').trim();
-        cleaned = cleaned.replace(/\d+\s+(?:mg\/dl|mgdl)/, '').trim();
+        let cleanedNoGlucose = cleaned.replace(/(?:glucose|sugar|level)\s+(?:is\s+)?\d+/, '').replace(/\d+\s+(?:mg\/dl|mgdl)/, '').trim();
 
-        // Skip if empty or just conversational filler
-        if (cleaned.length < 2 || cleaned === 'i had' || cleaned === 'i ate') continue;
+        // Skip if empty or conversational filler
+        const isFiller = /^(i\s+had|i\s+ate|a|an|some|the|and|with|of)$/i.test(cleanedNoGlucose);
+        if (cleanedNoGlucose.length < 2 || isFiller) continue;
 
-        const qtyMatch = cleaned.match(/^(\d+)\s+(.+)/);
-        const wordMatch = cleaned.match(/^(one|two|three|four|five|six|seven|eight|nine|ten)\s+(.+)/);
+        const fractionMatch = cleanedNoGlucose.match(/^(?:a\s+)?(half|quarter|third)\s+(?:a\s+)?(.+)/);
+        const qtyMatch = cleanedNoGlucose.match(/^(\d+(?:\/\d+|\.\d+)?)\s+(.+)/);
+        const wordMatch = cleanedNoGlucose.match(/^(one|two|three|four|five|six|seven|eight|nine|ten)\s+(.+)/);
 
-        if (qtyMatch) {
+        if (fractionMatch) {
             segments.push({
-                quantity: parseInt(qtyMatch[1]),
+                quantity: NUMBER_WORDS[fractionMatch[1]],
+                name: fractionMatch[2].trim(),
+                originalText: cleaned
+            });
+        } else if (qtyMatch) {
+            const rawQty = qtyMatch[1].trim();
+            let qty = 1;
+            if (rawQty.includes('/')) {
+                const [num, den] = rawQty.split('/').map(Number);
+                qty = num / den;
+            } else {
+                qty = parseFloat(rawQty);
+            }
+            segments.push({
+                quantity: qty,
                 name: qtyMatch[2].trim(),
                 originalText: cleaned
             });
         } else if (wordMatch) {
             segments.push({
-                quantity: NUMBER_WORDS[wordMatch[1] as string],
+                quantity: NUMBER_WORDS[wordMatch[1]],
                 name: wordMatch[2].trim(),
                 originalText: cleaned
             });
         } else {
-            const articleMatch = cleaned.match(/^(?:a|an|some)\s+(.+)/);
+            const articleMatch = cleanedNoGlucose.match(/^(?:a|an|some)\s+(.+)/);
             segments.push({
                 quantity: 1,
-                name: articleMatch ? articleMatch[1].trim() : cleaned,
+                name: articleMatch ? articleMatch[1].trim() : cleanedNoGlucose,
                 originalText: cleaned
             });
         }

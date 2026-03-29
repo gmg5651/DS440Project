@@ -73,11 +73,27 @@ export default function HomeResultsScreen() {
                     }
                 } catch (err) {
                     console.error('FatSecret Fallback Error for', segment.name, err);
+
+                    // Smarter fallback: Detect common foods for better defaults
+                    const name = segment.name.toLowerCase();
+                    const isLiquid = /oz|ml|cup|glass|juice|milk|water|soda/i.test(name);
+
+                    let fallbackBase = 15; // Better safe than sorry default
+                    if (isLiquid) {
+                        fallbackBase = 1.5;
+                        if (/milk/i.test(name)) fallbackBase = 1.5; // 12g per 8oz
+                        if (/juice|soda/i.test(name)) fallbackBase = 3.0; // ~24g per 8oz
+                    }
+                    else if (/apple|orange|pear/i.test(name)) fallbackBase = 15;
+                    else if (/banana|pineapple|mango/i.test(name)) fallbackBase = 25;
+                    else if (/hamburger|burger|sandwich/i.test(name)) fallbackBase = 40;
+                    else if (/taco|pizza|slice/i.test(name)) fallbackBase = 20;
+
                     results.push({
                         name: segment.name,
                         quantity: segment.quantity,
-                        baseCarbsG: 10,
-                        carbsG: 10 * segment.quantity
+                        baseCarbsG: fallbackBase,
+                        carbsG: fallbackBase * segment.quantity
                     });
                 }
             }
@@ -110,20 +126,29 @@ export default function HomeResultsScreen() {
                         renderItem={({ item, index }) => (
                             <View style={styles.card}>
                                 <View style={styles.info}>
-                                    <Text style={styles.foodName}>{item.name}</Text>
+                                    <View style={styles.nameRow}>
+                                        <Text style={styles.foodName}>{item.name}</Text>
+                                        <View style={[styles.sourceBadge, { backgroundColor: item.baseCarbsG === 15 || item.baseCarbsG === 1.5 || item.baseCarbsG === 25 || item.baseCarbsG === 40 ? '#444' : '#34C759' }]}>
+                                            <Text style={styles.sourceText}>
+                                                {item.baseCarbsG === 15 || item.baseCarbsG === 1.5 || item.baseCarbsG === 25 || item.baseCarbsG === 40 ? 'Estimate' : 'Cloud'}
+                                            </Text>
+                                        </View>
+                                    </View>
                                     <Text style={styles.carbs}>{Math.round(item.carbsG)}g Carbs</Text>
                                 </View>
 
                                 <View style={styles.qtyContainer}>
                                     <TouchableOpacity
-                                        onPress={() => updateItemQuantity(index, Math.max(0.5, item.quantity - 0.5))}
+                                        onPress={() => updateItemQuantity(index, Math.max(0, Math.round((item.quantity - 0.1) * 10) / 10))}
                                         style={styles.qtyBtn}
                                     >
                                         <Text style={styles.qtyBtnText}>-</Text>
                                     </TouchableOpacity>
-                                    <Text style={styles.qtyText}>{item.quantity}</Text>
+                                    <Text style={styles.qtyText}>
+                                        {Math.round(item.quantity * 10) / 10}
+                                    </Text>
                                     <TouchableOpacity
-                                        onPress={() => updateItemQuantity(index, item.quantity + 0.5)}
+                                        onPress={() => updateItemQuantity(index, Math.round((item.quantity + 0.1) * 10) / 10)}
                                         style={styles.qtyBtn}
                                     >
                                         <Text style={styles.qtyBtnText}>+</Text>
@@ -171,8 +196,7 @@ export default function HomeResultsScreen() {
                 disabled={isFetching}
             >
                 <Text style={styles.calcText}>Calculate Dose</Text>
-            </TouchableOpacity>
-        </View>
+            </TouchableOpacity>        </View>
     );
 }
 
@@ -191,6 +215,9 @@ const styles = StyleSheet.create({
     info: { flex: 1 },
     foodName: { fontSize: 18, color: '#fff', textTransform: 'capitalize', fontWeight: '600' },
     carbs: { fontSize: 14, color: '#007AFF', fontWeight: 'bold', marginTop: 4 },
+    nameRow: { flexDirection: 'row', alignItems: 'center' },
+    sourceBadge: { marginLeft: 8, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+    sourceText: { color: '#fff', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' },
     qtyContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#2c2c2e', borderRadius: 12, padding: 4 },
     qtyBtn: { width: 32, height: 32, justifyContent: 'center', alignItems: 'center', borderRadius: 8, backgroundColor: '#3a3a3c' },
     qtyBtnText: { color: '#fff', fontSize: 20, fontWeight: 'bold' },

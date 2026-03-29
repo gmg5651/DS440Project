@@ -111,7 +111,7 @@ export async function getFoodDetails(foodId: string): Promise<FatSecretNutrients
 export async function parseNaturalLanguage(input: string): Promise<FinalFoodItem[]> {
     const token = await getAccessToken();
 
-    const params = new URLSearchParams({
+    const bodyParams = new URLSearchParams({
         method: 'natural_language_processing.v1',
         user_input: input,
         format: 'json',
@@ -119,15 +119,19 @@ export async function parseNaturalLanguage(input: string): Promise<FinalFoodItem
     });
 
     console.log('[DEBUG] FatSecret NLP Request:', input);
-    const response = await fetch(`${API_BASE_URL}?${params.toString()}`, {
+    const response = await fetch(API_BASE_URL, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: bodyParams.toString(),
     });
 
     if (!response.ok) {
         const err = await response.text();
         console.error('FatSecret NLP Error Body:', err);
-        throw new Error('FatSecret NLP failed');
+        throw new Error(`FatSecret NLP failed: ${response.status} ${err}`);
     }
 
     const data = await response.json();
@@ -138,13 +142,17 @@ export async function parseNaturalLanguage(input: string): Promise<FinalFoodItem
     const items = Array.isArray(foods) ? foods : [foods];
 
     return items.map((f: any) => {
-        const carbs = parseFloat(f.servings?.serving?.carbohydrate || '0');
-        const qty = parseFloat(f.servings?.serving?.number_of_units || '1');
+        const servings = f.servings?.serving;
+        const serving = Array.isArray(servings) ? servings[0] : servings;
+
+        const totalCarbs = parseFloat(serving?.carbohydrate || '0');
+        const qty = parseFloat(serving?.number_of_units || '1');
+
         return {
             name: f.food_name,
-            carbsG: carbs,
+            carbsG: totalCarbs,
             quantity: qty,
-            baseCarbsG: qty > 0 ? carbs / qty : carbs
+            baseCarbsG: qty > 0 ? totalCarbs / qty : totalCarbs
         };
     });
 }

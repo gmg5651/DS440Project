@@ -23,7 +23,7 @@ export default function HomeStartScreen() {
             </TouchableOpacity>
 
             <Text style={styles.title}>Swiftulin</Text>
-            <Text style={styles.subtitle}>Tap to log a meal or dose</Text>
+            <Text style={styles.subtitle}>Your Private Insulin Dosing Assistant</Text>
 
             <TouchableOpacity
                 style={styles.micButton}
@@ -38,13 +38,6 @@ export default function HomeStartScreen() {
                 <Text style={styles.manualText}>⌨️ Manual Entry</Text>
             </TouchableOpacity>
 
-            <View style={styles.footerRow}>
-                <TouchableOpacity
-                    style={styles.statsButton}
-                    onPress={() => router.push('/stats')}>
-                    <Text style={styles.statsIconText}>📊 View Stats</Text>
-                </TouchableOpacity>
-            </View>
         </View>
     );
 }
@@ -106,20 +99,6 @@ const styles = StyleSheet.create({
     manualText: {
         color: '#fff',
         fontSize: 18,
-        fontWeight: '600',
-    },
-    footerRow: {
-        flexDirection: 'row',
-        marginTop: 20,
-    },
-    statsButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 10,
-    },
-    statsIconText: {
-        fontSize: 18,
-        color: '#007AFF',
         fontWeight: '600',
     },
 });
