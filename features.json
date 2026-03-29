@@ -21,11 +21,12 @@
         },
         {
             "id": "F-002",
-            "name": "Nutritional Extraction & Verification",
-            "description": "Extract carbs and glucose from text. Allow user to verify before calculation.",
+            "name": "High-Precision Nutritional Extraction",
+            "description": "Extract carbs and glucose from text supporting decimals (1.5) and fractions (3/4).",
             "uiElements": [
                 "Verification List (Foods & Carbs)",
-                "Glucose Detection Banner",
+                "Decimal Quantity Displays",
+                "0.1 Step Adjustments",
                 "Generic Food Fallback"
             ],
             "implementationFiles": [
@@ -33,27 +34,25 @@
                 "/src/utils/nlpExtractor.ts"
             ],
             "testFiles": [
-                "/src/__tests__/nlpExtractor.test.ts",
-                "/src/__tests__/HomeResultsScreen.test.tsx"
+                "/src/__tests__/nlpExtractor.test.ts"
             ]
         },
         {
             "id": "F-003",
             "name": "Insulin Calculation Breakdown",
-            "description": "Calculate and display meal and correction doses with transparent math.",
+            "description": "Calculate meal and correction doses with transparent math. No persistent logging.",
             "uiElements": [
                 "Meal Dose Math Detail",
                 "Correction Dose Math Detail",
-                "Automatic Total Dose",
-                "Confirmation Modal"
+                "Dose Completion Modal",
+                "Safety Caps & Disclaimers"
             ],
             "implementationFiles": [
                 "/src/screens/DoseModal.tsx",
                 "/src/utils/insulinCalculator.ts"
             ],
             "testFiles": [
-                "/src/__tests__/insulinCalculator.test.ts",
-                "/src/__tests__/DoseModal.test.tsx"
+                "/src/__tests__/insulinCalculator.test.ts"
             ]
         },
         {
@@ -70,6 +69,23 @@
             ],
             "testFiles": [
                 "/src/__tests__/ManualCarbModal.test.tsx"
+            ]
+        },
+        {
+            "id": "F-006",
+            "name": "Privacy-First Settings Engine",
+            "description": "Local-only database used exclusively for clinical settings (Ratios, Targets).",
+            "uiElements": [
+                "Settings 'Ratios' Badge",
+                "Secure Clinical Profile"
+            ],
+            "implementationFiles": [
+                "/src/db/index.ts",
+                "/src/db/sqlite.native.ts",
+                "/src/db/sqlite.ts"
+            ],
+            "testFiles": [
+                "/src/__tests__/settingsStore.test.ts"
             ]
         },
         {
