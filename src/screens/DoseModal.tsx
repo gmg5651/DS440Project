@@ -83,6 +83,14 @@ export default function DoseModal() {
                 </View>
             )}
 
+            {(settings.icr === 10 || settings.isf === 50) && (
+                <View style={[styles.warningBox, { borderLeftColor: '#007AFF', backgroundColor: 'rgba(0, 122, 255, 0.1)' }]}>
+                    <Text style={[styles.warningText, { color: '#007AFF' }]}>
+                        ℹ️ Using default ratios (ICR: {settings.icr}). Personalize in Settings for accuracy.
+                    </Text>
+                </View>
+            )}
+
             <Text style={styles.disclaimer}>
                 ⚠️ NOTICE: Carbs and insulin doses can be wrong. These are suggestions only. Always verify calculations manually before dosing.
             </Text>
@@ -99,7 +107,9 @@ export default function DoseModal() {
                 style={styles.cancelButton}
                 onPress={() => router.push('/settings')}
             >
-                <Text style={styles.cancelText}>Check Settings</Text>
+                <View style={styles.settingsHighlight}>
+                    <Text style={styles.cancelText}>Check Settings</Text>
+                </View>
             </TouchableOpacity>
         </View>
     );
@@ -134,6 +144,15 @@ const styles = StyleSheet.create({
         alignItems: 'center', shadowColor: '#34C759', shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }
     },
     confirmText: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
-    cancelButton: { padding: 16, alignItems: 'center', marginTop: 12 },
-    cancelText: { color: '#666', fontSize: 16 }
+    cancelButton: { marginTop: 12 },
+    cancelText: { color: '#007AFF', fontSize: 16, fontWeight: '600' },
+    settingsHighlight: {
+        paddingVertical: 12,
+        paddingHorizontal: 24,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#007AFF',
+        backgroundColor: 'rgba(0, 122, 255, 0.05)',
+        alignItems: 'center'
+    }
 });

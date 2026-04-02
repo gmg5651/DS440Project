@@ -3,10 +3,15 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { useVoiceToText } from '@/hooks/useVoiceToText';
 import { useFlowStore } from '@/store/flowStore';
+import { useSettingsStore } from '@/store/settingsStore';
 
 export default function HomeStartScreen() {
     const { startRecording } = useVoiceToText();
     const resetFlow = useFlowStore(state => state.resetFlow);
+    const settings = useSettingsStore();
+
+    // Check if ratios are unconfigured (using defaults)
+    const needsSetup = settings.icr === 10 && settings.isf === 50;
 
     const handleStart = () => {
         resetFlow();
@@ -19,10 +24,12 @@ export default function HomeStartScreen() {
                 style={styles.settingsHeaderBtn}
                 onPress={() => router.push('/settings')}
             >
-                <View style={styles.settingsBadge}>
+                <View style={[styles.settingsBadge, needsSetup && styles.needsSetupBadge]}>
                     <Text style={styles.settingsIcon}>⚙️</Text>
                     <Text style={styles.settingsText}>Ratios</Text>
+                    {needsSetup && <View style={styles.actionDot} />}
                 </View>
+                {needsSetup && <Text style={styles.setupHint}>First-time set up?</Text>}
             </TouchableOpacity>
 
             <Text style={styles.title}>Swiftulin</Text>
@@ -84,6 +91,25 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: 'bold',
         marginLeft: 6,
+    },
+    needsSetupBadge: {
+        borderColor: '#FF3B30',
+        backgroundColor: 'rgba(255, 59, 48, 0.1)',
+    },
+    actionDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: '#FF3B30',
+        marginLeft: 8,
+    },
+    setupHint: {
+        color: '#FF3B30',
+        fontSize: 10,
+        fontWeight: 'bold',
+        marginTop: 4,
+        textAlign: 'right',
+        textTransform: 'uppercase',
     },
     title: {
         fontSize: 48,

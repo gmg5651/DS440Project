@@ -27,6 +27,16 @@ export default function ProfileSettingsScreen() {
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
             <Text style={styles.title}>Personal Ratios</Text>
 
+            <View style={styles.infoBox}>
+                <Text style={styles.infoTitle}>Why set these?</Text>
+                <Text style={styles.infoText}>
+                    Your insulin-to-carb ratio (ICR) and sensitivity factor (ISF) are unique to you.
+                    Swiftulin uses these values to calculate your recommended dose.
+                    {"\n\n"}
+                    <Text style={{ fontWeight: 'bold' }}>Consult your doctor</Text> to get your specific ratios before using this app for dosing.
+                </Text>
+            </View>
+
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Basic Settings</Text>
 
@@ -139,5 +149,24 @@ const styles = StyleSheet.create({
         alignItems: 'center', marginTop: 10,
         shadowColor: '#007AFF', shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }
     },
-    saveText: { color: '#fff', fontSize: 18, fontWeight: 'bold' }
+    saveText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+    infoBox: {
+        backgroundColor: 'rgba(0, 122, 255, 0.1)',
+        padding: 20,
+        borderRadius: 16,
+        marginBottom: 32,
+        borderWidth: 1,
+        borderColor: '#007AFF'
+    },
+    infoTitle: {
+        color: '#007AFF',
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 8
+    },
+    infoText: {
+        color: '#aaa',
+        fontSize: 14,
+        lineHeight: 20
+    }
 });

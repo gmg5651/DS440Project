@@ -44,7 +44,10 @@ export default function HomeResultsScreen() {
                     const match = await searchUSDAFood(seg.name);
 
                     if (match) {
-                        const carbs = getCarbsForQuantity(match, seg.quantity);
+                        // If a volume unit was stated (e.g. "2 cups"), use exact gram weight
+                        const carbs = seg.gramsOverride != null
+                            ? (match.carbs100g * seg.gramsOverride) / 100
+                            : getCarbsForQuantity(match, seg.quantity);
                         return {
                             name: match.name,
                             carbsG: carbs,

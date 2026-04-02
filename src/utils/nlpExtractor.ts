@@ -2,6 +2,9 @@ export interface FoodSegment {
     name: string;
     quantity: number;
     originalText: string;
+    /** If a volume/weight unit was stated (e.g. 'cups'), total grams for the stated quantity */
+    gramsOverride?: number;
+    unit?: string;
 }
 
 export interface ExtractionResult {
@@ -9,6 +12,34 @@ export interface ExtractionResult {
     glucose: number | null;
     confidence: number;
 }
+
+/** Common volume/weight units → mL or g per 1 unit */
+const UNIT_ML: Record<string, number> = {
+    'cup': 240, 'cups': 240,
+    'oz': 29.5, 'ounce': 29.5, 'ounces': 29.5, 'fl oz': 29.5,
+    'tbsp': 14.8, 'tablespoon': 14.8, 'tablespoons': 14.8,
+    'tsp': 4.9, 'teaspoon': 4.9, 'teaspoons': 4.9,
+    'ml': 1, 'milliliter': 1, 'milliliters': 1,
+    'l': 1000, 'liter': 1000, 'liters': 1000,
+    'g': 1, 'gram': 1, 'grams': 1,
+    'lb': 453.6, 'pound': 453.6, 'pounds': 453.6,
+    'slice': 28, 'slices': 28,
+    'piece': 100, 'pieces': 100,
+};
+
+/** Canonical unit name for display */
+const UNIT_CANONICAL: Record<string, string> = {
+    'cup': 'cup', 'cups': 'cup',
+    'oz': 'oz', 'ounce': 'oz', 'ounces': 'oz', 'fl oz': 'oz',
+    'tbsp': 'tbsp', 'tablespoon': 'tbsp', 'tablespoons': 'tbsp',
+    'tsp': 'tsp', 'teaspoon': 'tsp', 'teaspoons': 'tsp',
+    'ml': 'ml', 'milliliter': 'ml', 'milliliters': 'ml',
+    'l': 'l', 'liter': 'l', 'liters': 'l',
+    'g': 'g', 'gram': 'g', 'grams': 'g',
+    'lb': 'lb', 'pound': 'lb', 'pounds': 'lb',
+    'slice': 'slice', 'slices': 'slice',
+    'piece': 'piece', 'pieces': 'piece',
+};
 
 const NUMBER_WORDS: Record<string, number> = {
     'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
@@ -32,13 +63,14 @@ export function segmentMeal(utterance: string): ExtractionResult {
     let initialParts = lower.split(delimiterPattern).map(p => p.trim()).filter(p => p.length > 2);
 
     // 3. Pre-process "of": e.g. "3/4 of a banana" -> "3/4 banana"
+    // Supports decimals with leading dots
     initialParts = initialParts.map(part => {
-        return part.replace(/(\d+(?:\/\d+|\.\d+)?|one|two|three|four|five|six|seven|eight|nine|ten)\s+of\b\s*(?:a|an|the)?\s*/i, '$1 ');
+        return part.replace(/((?:\d+(?:\/\d+|\.\d+)?|\.\d+)|one|two|three|four|five|six|seven|eight|nine|ten)\s+of\b\s*(?:a|an|the)?\s*/i, '$1 ');
     });
 
     // 4. Refining segments: look for numbers that aren't at the start and split there too
-    // Note: We don't split on 'a' or 'an' here to avoid breaking articles
-    const numberPattern = /\b(\d+(?:\/\d+|\.\d+)?|one|two|three|four|five|six|seven|eight|nine|ten)\b/gi;
+    // Supports decimals with leading points (e.g. .75)
+    const numberPattern = /(?:\b\d+(?:\/\d+|\.\d+)?|\.\d+)\b|(?:one|two|three|four|five|six|seven|eight|nine|ten)\b/gi;
     const finalParts: string[] = [];
 
     for (const part of initialParts) {
@@ -59,16 +91,25 @@ export function segmentMeal(utterance: string): ExtractionResult {
     for (const part of finalParts) {
         let cleaned = part.trim();
 
-        // Remove glucose part
-        let cleanedNoGlucose = cleaned.replace(/(?:glucose|sugar|level)\s+(?:is\s+)?\d+/, '').replace(/\d+\s+(?:mg\/dl|mgdl)/, '').trim();
+        // 1. Remove glucose part if it exists in the segment
+        let nameOnly = cleaned.replace(/(?:glucose|sugar|level)\s+(?:is\s+)?\d+/, '').replace(/\d+\s+(?:mg\/dl|mgdl)/, '').trim();
 
-        // Skip if empty or conversational filler
-        const isFiller = /^(i\s+had|i\s+ate|a|an|some|the|and|with|of)$/i.test(cleanedNoGlucose);
-        if (cleanedNoGlucose.length < 2 || isFiller) continue;
+        // 2. Aggressive Filler & Article Stripping
+        // Strips "i had", "i ate", "i've had", "having", etc.
+        const fillerPrefixes = /^(i\s+had|i\s+ate|i've\s+had|i've\s+eaten|i\s+am\s+having|having|ate|had)\s+/i;
+        const articlePrefixes = /^(?:a|an|some|the)\s+/i;
 
-        const fractionMatch = cleanedNoGlucose.match(/^(?:a\s+)?(half|quarter|third)\s+(?:a\s+)?(.+)/);
-        const qtyMatch = cleanedNoGlucose.match(/^(\d+(?:\/\d+|\.\d+)?)\s+(.+)/);
-        const wordMatch = cleanedNoGlucose.match(/^(one|two|three|four|five|six|seven|eight|nine|ten)\s+(.+)/);
+        nameOnly = nameOnly.replace(fillerPrefixes, '').replace(articlePrefixes, '').trim();
+
+        // Skip if empty or simple filler
+        if (nameOnly.length < 2) continue;
+
+        // Support digits with possible leading dots
+        const numRegex = /(?:\d+(?:\/\d+|\.\d+)?|\.\d+)/;
+        const fractionMatch = nameOnly.match(/^(half|quarter|third)\s+(?:a\s+)?(.+)/);
+        const qtyPattern = new RegExp(`^(${numRegex.source})\\s+(.+)`);
+        const qtyMatch = nameOnly.match(qtyPattern);
+        const wordMatch = nameOnly.match(/^(one|two|three|four|five|six|seven|eight|nine|ten)\s+(.+)/);
 
         if (fractionMatch) {
             segments.push({
@@ -85,22 +126,56 @@ export function segmentMeal(utterance: string): ExtractionResult {
             } else {
                 qty = parseFloat(rawQty);
             }
-            segments.push({
-                quantity: qty,
-                name: qtyMatch[2].trim(),
-                originalText: cleaned
-            });
+            // Check if next token is a volume/weight unit (e.g. "2 cups of orange juice")
+            const unitKeys = Object.keys(UNIT_ML).join('|');
+            const unitPattern = new RegExp(`^(${unitKeys})\\s+(?:of\\s+)?(.+)$`, 'i');
+            const unitMatch = qtyMatch[2].trim().match(unitPattern);
+            if (unitMatch) {
+                const unitKey = unitMatch[1].toLowerCase();
+                const foodName = unitMatch[2].trim();
+                const mlPerUnit = UNIT_ML[unitKey] ?? 100;
+                segments.push({
+                    quantity: qty,
+                    name: foodName,
+                    originalText: cleaned,
+                    gramsOverride: qty * mlPerUnit,  // total grams/ml for this segment
+                    unit: UNIT_CANONICAL[unitKey] ?? unitKey,
+                });
+            } else {
+                segments.push({
+                    quantity: qty,
+                    name: qtyMatch[2].trim(),
+                    originalText: cleaned
+                });
+            }
         } else if (wordMatch) {
-            segments.push({
-                quantity: NUMBER_WORDS[wordMatch[1]],
-                name: wordMatch[2].trim(),
-                originalText: cleaned
-            });
+            // Same unit detection for word-number matches
+            const wordQty = NUMBER_WORDS[wordMatch[1]];
+            const unitKeys = Object.keys(UNIT_ML).join('|');
+            const unitPattern = new RegExp(`^(${unitKeys})\\s+(?:of\\s+)?(.+)$`, 'i');
+            const unitMatch = wordMatch[2].trim().match(unitPattern);
+            if (unitMatch) {
+                const unitKey = unitMatch[1].toLowerCase();
+                const foodName = unitMatch[2].trim();
+                const mlPerUnit = UNIT_ML[unitKey] ?? 100;
+                segments.push({
+                    quantity: wordQty,
+                    name: foodName,
+                    originalText: cleaned,
+                    gramsOverride: wordQty * mlPerUnit,
+                    unit: UNIT_CANONICAL[unitKey] ?? unitKey,
+                });
+            } else {
+                segments.push({
+                    quantity: wordQty,
+                    name: wordMatch[2].trim(),
+                    originalText: cleaned
+                });
+            }
         } else {
-            const articleMatch = cleanedNoGlucose.match(/^(?:a|an|some)\s+(.+)/);
             segments.push({
                 quantity: 1,
-                name: articleMatch ? articleMatch[1].trim() : cleanedNoGlucose,
+                name: nameOnly,
                 originalText: cleaned
             });
         }
