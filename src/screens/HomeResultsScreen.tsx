@@ -3,9 +3,9 @@ import { View, Text, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator, 
 import { useFlowStore, FinalFoodItem } from '@/store/flowStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { segmentMeal } from '@/utils/nlpExtractor';
-import { searchUSDAFood, getCarbsFromUSDA } from '@/services/usdaService';
-import { router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
+import { searchUSDAFood, getCarbsForQuantity } from '@/services/usdaService';
+import { router } from 'expo-router';
 
 export default function HomeResultsScreen() {
     const settings = useSettingsStore();
@@ -29,55 +29,48 @@ export default function HomeResultsScreen() {
         }
     }, [transcript, segments]);
 
-    // Query to handle Gemini parsing + USDA lookup
-    const { isFetching } = useQuery({
-        queryKey: ['parse-meal', transcript],
+    // Query to handle USDA lookup for each segment
+    const { isFetching, error, refetch } = useQuery({
+        queryKey: ['usda-search', segments],
         queryFn: async () => {
-            if (!transcript) return [];
+            if (segments.length === 0) return [];
 
-            try {
-                // 1. Call our Gemini API Route for structured parsing
-                const parseResponse = await fetch('/api/parse-meal', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ transcript }),
-                });
+            const results = await Promise.all(segments.map(async (seg) => {
+                try {
+                    // searchAndGetNutrition follows ChatGPT advice:
+                    // 1. Foundation/SR Legacy datatypes
+                    // 2. Similarity ranking
+                    // 3. Carbohydrate, by difference
+                    const match = await searchUSDAFood(seg.name);
 
-                const { items: parsedItems } = await parseResponse.json();
-
-                if (!parsedItems || parsedItems.length === 0) return [];
-
-                // 2. For each item, enrich with USDA data
-                const enrichedItems: FinalFoodItem[] = [];
-                for (const item of parsedItems) {
-                    try {
-                        const usdaResults = await searchUSDAFood(item.name);
-                        if (usdaResults.length > 0) {
-                            const bestMatch = usdaResults[0];
-                            const carbs = getCarbsFromUSDA(bestMatch);
-                            enrichedItems.push({
-                                ...item,
-                                name: bestMatch.description,
-                                baseCarbsG: carbs,
-                                carbsG: carbs * item.quantity
-                            });
-                        } else {
-                            enrichedItems.push(item);
-                        }
-                    } catch (err) {
-                        console.warn(`USDA update failed for ${item.name}`, err);
-                        enrichedItems.push(item);
+                    if (match) {
+                        const carbs = getCarbsForQuantity(match, seg.quantity);
+                        return {
+                            name: match.name,
+                            carbsG: carbs,
+                            quantity: seg.quantity,
+                            baseCarbsG: match.carbs100g
+                        };
                     }
+                } catch (err) {
+                    console.error(`Error searching ${seg.name}:`, err);
                 }
 
-                setFinalItems(enrichedItems);
-                return enrichedItems;
-            } catch (error) {
-                console.error('Unified Parsing Error:', error);
-                return [];
-            }
+                // Fallback for Estimate if USDA search fails
+                return {
+                    name: seg.name,
+                    quantity: seg.quantity,
+                    baseCarbsG: 15,
+                    carbsG: 15 * seg.quantity
+                };
+            }));
+
+            const validItems = results.filter(Boolean) as FinalFoodItem[];
+            setFinalItems(validItems);
+            return validItems;
         },
-        enabled: !!transcript && finalItems.length === 0,
+        enabled: segments.length > 0 && finalItems.length === 0,
+        retry: false
     });
 
     return (
@@ -87,6 +80,14 @@ export default function HomeResultsScreen() {
             {transcript ? (
                 <View style={styles.transcriptDebug}>
                     <Text style={styles.debugText}>"{transcript}"</Text>
+                    {error && (
+                        <View style={styles.errorBanner}>
+                            <Text style={styles.errorText}>Error: {(error as Error).message}</Text>
+                            <TouchableOpacity onPress={() => refetch()} style={styles.retryBtn}>
+                                <Text style={styles.retryText}>Retry</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
                 </View>
             ) : null}
 
@@ -105,9 +106,9 @@ export default function HomeResultsScreen() {
                                 <View style={styles.info}>
                                     <View style={styles.nameRow}>
                                         <Text style={styles.foodName}>{item.name}</Text>
-                                        <View style={[styles.sourceBadge, { backgroundColor: item.baseCarbsG === 15 || item.baseCarbsG === 1.5 || item.baseCarbsG === 25 || item.baseCarbsG === 40 ? '#444' : '#34C759' }]}>
+                                        <View style={[styles.sourceBadge, { backgroundColor: item.baseCarbsG === 15 ? '#444' : '#34C759' }]}>
                                             <Text style={styles.sourceText}>
-                                                {item.baseCarbsG === 15 || item.baseCarbsG === 1.5 || item.baseCarbsG === 25 || item.baseCarbsG === 40 ? 'Estimate' : 'USDA'}
+                                                {item.baseCarbsG === 15 ? 'Estimate' : 'USDA'}
                                             </Text>
                                         </View>
                                     </View>
@@ -222,5 +223,9 @@ const styles = StyleSheet.create({
         shadowColor: '#007AFF', shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }
     },
     disabledButton: { backgroundColor: '#333' },
-    calcText: { color: '#fff', fontSize: 18, fontWeight: 'bold' }
+    calcText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+    errorBanner: { marginTop: 10, padding: 10, backgroundColor: '#442222', borderRadius: 8, borderWidth: 1, borderColor: '#ff4444' },
+    errorText: { color: '#ff4444', fontSize: 12, fontWeight: '600' },
+    retryBtn: { marginTop: 8, padding: 8, backgroundColor: '#ff4444', borderRadius: 6, alignSelf: 'flex-start' },
+    retryText: { color: '#fff', fontSize: 12, fontWeight: 'bold' }
 });

@@ -32,8 +32,8 @@ Antigravity must follow these steps for every task:
 - **Ambiguity Fallback**: If NLP confidence is low, prompt for manual clarification rather than guessing.
 
 ## 6. Architecture & Offline Policy
-- **Precision Pipeline**: Primary extraction via **Google Gemini 1.5 Flash** (server-side API Route) and nutritional verification via **USDA FoodData Central**.
-- **Privacy Hardening**: API keys for external services must never be stored on the client. Use Expo API Routes as secure proxies.
+- **Precision Pipeline**: Primary extraction via **regex-based segmentation** and nutritional verification via **USDA FoodData Central** (Foundation/SR Legacy).
+- **Privacy Hardening**: API keys for external services must never be stored on the client. Use environment variables as secure proxies.
 - **Offline Calculation**: Basic dose math (ICR/ISF) must function offline using cached or user-input ratios.
 
 ## 7. Coding Style

@@ -49,5 +49,8 @@ export const useFlowStore = create<FlowState>((set) => ({
     setGlucose: (g) => set({ glucose: g }),
     setIcr: (icr) => set({ icr }),
     setIsLoading: (loading) => set({ isLoading: loading }),
-    resetFlow: () => set({ transcript: '', segments: [], finalItems: [], glucose: null, icr: null, isLoading: false }),
+    resetFlow: () => set({
+        transcript: '', segments: [], finalItems: [], glucose: null, icr: null,
+        isLoading: false
+    }),
 }));
