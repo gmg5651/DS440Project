@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator, 
 import { useFlowStore, FinalFoodItem } from '@/store/flowStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { segmentMeal } from '@/utils/nlpExtractor';
-import { searchFood, getFoodDetails, parseNaturalLanguage } from '@/services/fatSecretService';
+import { searchUSDAFood, getCarbsFromUSDA } from '@/services/usdaService';
 import { router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 
@@ -20,6 +20,7 @@ export default function HomeResultsScreen() {
     const displayGlucose = glucose !== null ? glucose : settings.targetGlucose;
     const displayIcr = icr !== null ? icr : settings.icr;
 
+    // Legacy segmenter still runs to update glucose if found in text
     useEffect(() => {
         if (transcript && segments.length === 0) {
             const result = segmentMeal(transcript);
@@ -28,77 +29,53 @@ export default function HomeResultsScreen() {
         }
     }, [transcript, segments]);
 
-    // Query to fetch data from FatSecret
+    // Query to handle Gemini parsing + USDA lookup
     const { isFetching } = useQuery({
-        queryKey: ['fatsecret', transcript, segments],
+        queryKey: ['parse-meal', transcript],
         queryFn: async () => {
             if (!transcript) return [];
 
             try {
-                // 1. Try high-accuracy Natural Language Processing first
-                const nlpResults = await parseNaturalLanguage(transcript);
-                if (nlpResults.length > 0) {
-                    setFinalItems(nlpResults);
-                    return nlpResults;
-                }
-            } catch (err) {
-                console.warn('FatSecret NLP failed, falling back to manual segments:', err);
-            }
+                // 1. Call our Gemini API Route for structured parsing
+                const parseResponse = await fetch('/api/parse-meal', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ transcript }),
+                });
 
-            // 2. Fallback to manual segmentation if NLP fails or returns nothing
-            if (segments.length === 0) return [];
+                const { items: parsedItems } = await parseResponse.json();
 
-            const results: FinalFoodItem[] = [];
-            for (const segment of segments) {
-                try {
-                    const searchResults = await searchFood(segment.name);
-                    if (searchResults.length > 0) {
-                        const bestMatch = searchResults[0];
-                        const details = await getFoodDetails(bestMatch.food_id);
-                        if (details) {
-                            results.push({
-                                name: bestMatch.food_name,
-                                quantity: segment.quantity,
-                                baseCarbsG: details.carbohydrate,
-                                carbsG: details.carbohydrate * segment.quantity
+                if (!parsedItems || parsedItems.length === 0) return [];
+
+                // 2. For each item, enrich with USDA data
+                const enrichedItems: FinalFoodItem[] = [];
+                for (const item of parsedItems) {
+                    try {
+                        const usdaResults = await searchUSDAFood(item.name);
+                        if (usdaResults.length > 0) {
+                            const bestMatch = usdaResults[0];
+                            const carbs = getCarbsFromUSDA(bestMatch);
+                            enrichedItems.push({
+                                ...item,
+                                name: bestMatch.description,
+                                baseCarbsG: carbs,
+                                carbsG: carbs * item.quantity
                             });
+                        } else {
+                            enrichedItems.push(item);
                         }
-                    } else {
-                        results.push({
-                            name: segment.name,
-                            quantity: segment.quantity,
-                            baseCarbsG: 15,
-                            carbsG: 15 * segment.quantity
-                        });
+                    } catch (err) {
+                        console.warn(`USDA update failed for ${item.name}`, err);
+                        enrichedItems.push(item);
                     }
-                } catch (err) {
-                    console.error('FatSecret Fallback Error for', segment.name, err);
-
-                    // Smarter fallback: Detect common foods for better defaults
-                    const name = segment.name.toLowerCase();
-                    const isLiquid = /oz|ml|cup|glass|juice|milk|water|soda/i.test(name);
-
-                    let fallbackBase = 15; // Better safe than sorry default
-                    if (isLiquid) {
-                        fallbackBase = 1.5;
-                        if (/milk/i.test(name)) fallbackBase = 1.5; // 12g per 8oz
-                        if (/juice|soda/i.test(name)) fallbackBase = 3.0; // ~24g per 8oz
-                    }
-                    else if (/apple|orange|pear/i.test(name)) fallbackBase = 15;
-                    else if (/banana|pineapple|mango/i.test(name)) fallbackBase = 25;
-                    else if (/hamburger|burger|sandwich/i.test(name)) fallbackBase = 40;
-                    else if (/taco|pizza|slice/i.test(name)) fallbackBase = 20;
-
-                    results.push({
-                        name: segment.name,
-                        quantity: segment.quantity,
-                        baseCarbsG: fallbackBase,
-                        carbsG: fallbackBase * segment.quantity
-                    });
                 }
+
+                setFinalItems(enrichedItems);
+                return enrichedItems;
+            } catch (error) {
+                console.error('Unified Parsing Error:', error);
+                return [];
             }
-            setFinalItems(results);
-            return results;
         },
         enabled: !!transcript && finalItems.length === 0,
     });
@@ -130,7 +107,7 @@ export default function HomeResultsScreen() {
                                         <Text style={styles.foodName}>{item.name}</Text>
                                         <View style={[styles.sourceBadge, { backgroundColor: item.baseCarbsG === 15 || item.baseCarbsG === 1.5 || item.baseCarbsG === 25 || item.baseCarbsG === 40 ? '#444' : '#34C759' }]}>
                                             <Text style={styles.sourceText}>
-                                                {item.baseCarbsG === 15 || item.baseCarbsG === 1.5 || item.baseCarbsG === 25 || item.baseCarbsG === 40 ? 'Estimate' : 'Cloud'}
+                                                {item.baseCarbsG === 15 || item.baseCarbsG === 1.5 || item.baseCarbsG === 25 || item.baseCarbsG === 40 ? 'Estimate' : 'USDA'}
                                             </Text>
                                         </View>
                                     </View>
@@ -196,7 +173,8 @@ export default function HomeResultsScreen() {
                 disabled={isFetching}
             >
                 <Text style={styles.calcText}>Calculate Dose</Text>
-            </TouchableOpacity>        </View>
+            </TouchableOpacity>
+        </View>
     );
 }
 

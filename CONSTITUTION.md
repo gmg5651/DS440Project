@@ -32,9 +32,9 @@ Antigravity must follow these steps for every task:
 - **Ambiguity Fallback**: If NLP confidence is low, prompt for manual clarification rather than guessing.
 
 ## 6. Architecture & Offline Policy
-- **Offline Calculation**: All insulin calculations must function without an internet connection using local settings for ICR and ISF.
-- **Privacy Hardening**: Ensure no long-term logs exist in the database; the database is used strictly for storing user settings (Ratios, Targets).
-- **Secure Storage**: Use Expo SecureStore for clinical ratios when possible.
+- **Precision Pipeline**: Primary extraction via **Google Gemini 1.5 Flash** (server-side API Route) and nutritional verification via **USDA FoodData Central**.
+- **Privacy Hardening**: API keys for external services must never be stored on the client. Use Expo API Routes as secure proxies.
+- **Offline Calculation**: Basic dose math (ICR/ISF) must function offline using cached or user-input ratios.
 
 ## 7. Coding Style
 - Functional components with Hooks.

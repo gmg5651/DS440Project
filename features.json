@@ -21,17 +21,17 @@
         },
         {
             "id": "F-002",
-            "name": "High-Precision Nutritional Extraction",
-            "description": "Extract carbs and glucose from text supporting decimals (1.5) and fractions (3/4).",
+            "name": "Gemini-Powered Extraction & USDA Lookup",
+            "description": "High-precision extraction via Gemini LLM with nutritional enrichment from USDA FoodData Central.",
             "uiElements": [
                 "Verification List (Foods & Carbs)",
-                "Decimal Quantity Displays",
-                "0.1 Step Adjustments",
-                "Generic Food Fallback"
+                "USDA/Estimate Badges",
+                "0.1 Step Adjustments"
             ],
             "implementationFiles": [
                 "/src/screens/HomeResultsScreen.tsx",
-                "/src/utils/nlpExtractor.ts"
+                "/app/api/parse-meal+api.ts",
+                "/src/services/usdaService.ts"
             ],
             "testFiles": [
                 "/src/__tests__/nlpExtractor.test.ts"
@@ -45,6 +45,8 @@
                 "Meal Dose Math Detail",
                 "Correction Dose Math Detail",
                 "Dose Completion Modal",
+                "- **Nutrition Data**: USDA FoodData Central API (Primary) + Gemini LLM (Extraction).",
+                "- **LLM**: Google Gemini 1.5 Flash via Expo API Routes.",
                 "Safety Caps & Disclaimers"
             ],
             "implementationFiles": [
