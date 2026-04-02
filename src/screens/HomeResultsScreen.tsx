@@ -52,19 +52,25 @@ export default function HomeResultsScreen() {
                             name: match.name,
                             carbsG: carbs,
                             quantity: seg.quantity,
-                            baseCarbsG: match.carbs100g
+                            baseCarbsG: match.carbs100g,
+                            gramsPerUnit: seg.gramsOverride != null
+                                ? seg.gramsOverride / seg.quantity
+                                : match.gramsPerUnit,
+                            unitName: match.unitName,
                         };
                     }
                 } catch (err) {
                     console.error(`Error searching ${seg.name}:`, err);
                 }
 
-                // Fallback for Estimate if USDA search fails
+                // Fallback Estimate if USDA search fails
                 return {
                     name: seg.name,
                     quantity: seg.quantity,
                     baseCarbsG: 15,
-                    carbsG: 15 * seg.quantity
+                    carbsG: 15 * seg.quantity,
+                    gramsPerUnit: 100,
+                    unitName: '100g',
                 };
             }));
 
@@ -109,12 +115,15 @@ export default function HomeResultsScreen() {
                                 <View style={styles.info}>
                                     <View style={styles.nameRow}>
                                         <Text style={styles.foodName}>{item.name}</Text>
-                                        <View style={[styles.sourceBadge, { backgroundColor: item.baseCarbsG === 15 ? '#444' : '#34C759' }]}>
+                                        <View style={[styles.sourceBadge, { backgroundColor: item.baseCarbsG !== 15 ? '#34C759' : '#444' }]}>
                                             <Text style={styles.sourceText}>
-                                                {item.baseCarbsG === 15 ? 'Estimate' : 'USDA'}
+                                                {item.baseCarbsG !== 15 ? 'USDA' : 'Estimate'}
                                             </Text>
                                         </View>
                                     </View>
+                                    <Text style={styles.gramsText}>
+                                        {Math.round(item.gramsPerUnit)}g · {item.unitName || '1 portion'}
+                                    </Text>
                                     <Text style={styles.carbs}>{Math.round(item.carbsG)}g Carbs</Text>
                                 </View>
 
@@ -195,8 +204,9 @@ const styles = StyleSheet.create({
         borderWidth: 1, borderColor: '#2c2c2e'
     },
     info: { flex: 1 },
-    foodName: { fontSize: 18, color: '#fff', textTransform: 'capitalize', fontWeight: '600' },
-    carbs: { fontSize: 14, color: '#007AFF', fontWeight: 'bold', marginTop: 4 },
+    foodName: { fontSize: 16, color: '#fff', textTransform: 'capitalize', fontWeight: '600', flexShrink: 1 },
+    gramsText: { fontSize: 12, color: '#8e8e93', marginTop: 2, marginBottom: 2 },
+    carbs: { fontSize: 14, color: '#007AFF', fontWeight: 'bold', marginTop: 2 },
     nameRow: { flexDirection: 'row', alignItems: 'center' },
     sourceBadge: { marginLeft: 8, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
     sourceText: { color: '#fff', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' },

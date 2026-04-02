@@ -39,6 +39,7 @@ export async function searchUSDAFood(query: string): Promise<USDAMatch | null> {
 
     // ── Step 2: Rank results ─────────────────────────────────────────────────
     const q = query.toLowerCase();
+    const queryWords = q.split(/\s+/);
 
     // Bad prefixes = heavy penalty so they never win
     const BAD_PREFIXES = [
@@ -53,13 +54,21 @@ export async function searchUSDAFood(query: string): Promise<USDAMatch | null> {
 
         let sim = calculateSimilarity(query, f.description);
 
-        // A. Prefix bonus – "Bananas, raw" starts with "banana"
-        if (desc.startsWith(q)) sim += 0.25;
+        // A. Word Overlap Bonus (NEW) - massive boost if all words in query exist in description
+        // This solves "Gala Apple" -> matches "Apples, gala, with skin, raw" beating "Strudel"
+        const allWordsMatch = queryWords.every(w => {
+            // handle "apple" matching "apples"
+            return desc.includes(w) || desc.includes(w + 's') || (w.endsWith('s') && desc.includes(w.slice(0, -1)));
+        });
+        if (allWordsMatch) sim += 0.6;
 
-        // B. Exact/plural bonus
+        // B. Prefix bonus – "Bananas, raw" starts with "banana"
+        if (desc.startsWith(q) || desc.startsWith(queryWords[queryWords.length - 1])) sim += 0.25;
+
+        // C. Exact/plural bonus
         if (desc === q || desc === q + 's' || desc + 's' === q) sim += 0.5;
 
-        // C. "raw" bonus – simple, unprocessed
+        // D. "raw" bonus – simple, unprocessed
         if (desc.includes('raw')) sim += 0.1;
 
         // D. Length penalty

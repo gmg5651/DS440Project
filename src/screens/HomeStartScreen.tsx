@@ -35,6 +35,20 @@ export default function HomeStartScreen() {
             <Text style={styles.title}>Swiftulin</Text>
             <Text style={styles.subtitle}>Your Private Insulin Dosing Assistant</Text>
 
+            {needsSetup && (
+                <TouchableOpacity
+                    style={styles.setupBanner}
+                    onPress={() => router.push('/settings')}
+                    activeOpacity={0.85}
+                >
+                    <Text style={styles.setupBannerIcon}>⚠️</Text>
+                    <View style={styles.setupBannerText}>
+                        <Text style={styles.setupBannerTitle}>Set your personal ratios first</Text>
+                        <Text style={styles.setupBannerBody}>Your ICR and ISF directly affect your dose. Tap here to personalize before logging a meal.</Text>
+                    </View>
+                    <Text style={styles.setupBannerArrow}>›</Text>
+                </TouchableOpacity>
+            )}
             <TouchableOpacity
                 style={styles.micButton}
                 testID="btn-start-recording"
@@ -56,7 +70,7 @@ export default function HomeStartScreen() {
                 <Text style={styles.exampleText}>• "One large apple and a cup of milk"</Text>
                 <Text style={styles.exampleText}>• "1.5 oranges and 10 oz of juice"</Text>
             </View>
-        </View>
+        </View >
     );
 }
 
@@ -120,7 +134,38 @@ const styles = StyleSheet.create({
     subtitle: {
         fontSize: 18,
         color: '#888',
-        marginBottom: 60,
+        marginBottom: 28,
+        textAlign: 'center',
+    },
+    setupBanner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 204, 0, 0.10)',
+        borderRadius: 16,
+        borderWidth: 1.5,
+        borderColor: '#FFCC00',
+        padding: 16,
+        marginBottom: 32,
+        width: '100%',
+        gap: 12,
+    },
+    setupBannerIcon: { fontSize: 22 },
+    setupBannerText: { flex: 1 },
+    setupBannerTitle: {
+        color: '#FFD60A',
+        fontWeight: '700',
+        fontSize: 15,
+        marginBottom: 4,
+    },
+    setupBannerBody: {
+        color: '#ccaa00',
+        fontSize: 13,
+        lineHeight: 18,
+    },
+    setupBannerArrow: {
+        color: '#FFD60A',
+        fontSize: 24,
+        fontWeight: '300',
     },
     micButton: {
         width: 120,

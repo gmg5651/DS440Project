@@ -5,7 +5,9 @@ export interface FinalFoodItem {
     name: string;
     carbsG: number;
     quantity: number;
-    baseCarbsG: number; // Carbs for 1 unit
+    baseCarbsG: number;   // carbs per 100g (USDA)
+    gramsPerUnit: number; // gram weight for 1 portion (e.g. 110g for 1 banana)
+    unitName: string;     // human label (e.g. "Banana", "1 medium")
 }
 
 interface FlowState {
@@ -13,7 +15,7 @@ interface FlowState {
     segments: FoodSegment[];
     finalItems: FinalFoodItem[];
     glucose: number | null;
-    icr: number | null; // Session-specific ICR override
+    icr: number | null;
     isLoading: boolean;
     setTranscript: (t: string) => void;
     setSegments: (s: FoodSegment[]) => void;
@@ -38,11 +40,10 @@ export const useFlowStore = create<FlowState>((set) => ({
     updateItemQuantity: (index, newQty) => set((state) => {
         const newItems = [...state.finalItems];
         if (newItems[index]) {
-            newItems[index] = {
-                ...newItems[index],
-                quantity: newQty,
-                carbsG: newItems[index].baseCarbsG * newQty
-            };
+            const item = newItems[index];
+            // Recompute: carbs_per_100g * grams_per_unit * qty / 100
+            const newCarbs = (item.baseCarbsG * item.gramsPerUnit * newQty) / 100;
+            newItems[index] = { ...item, quantity: newQty, carbsG: newCarbs };
         }
         return { finalItems: newItems };
     }),
