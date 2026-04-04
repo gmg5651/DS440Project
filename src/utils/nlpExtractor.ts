@@ -96,8 +96,8 @@ export function segmentMeal(utterance: string): ExtractionResult {
 
         // 2. Aggressive Filler & Article Stripping
         // Strips "i had", "i ate", "i've had", "having", etc.
-        const fillerPrefixes = /^(i\s+had|i\s+ate|i've\s+had|i've\s+eaten|i\s+am\s+having|having|ate|had)\s+/i;
-        const articlePrefixes = /^(?:a|an|some|the)\s+/i;
+        const fillerPrefixes = /^(i\s+had|i\s+ate|i've\s+had|i've\s+eaten|i\s+am\s+having|having|ate|had)(?:\s+|$)/i;
+        const articlePrefixes = /^(?:a|an|some|the)(?:\s+|$)/i;
 
         nameOnly = nameOnly.replace(fillerPrefixes, '').replace(articlePrefixes, '').trim();
 

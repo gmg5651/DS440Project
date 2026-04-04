@@ -63,15 +63,8 @@ export default function HomeResultsScreen() {
                     console.error(`Error searching ${seg.name}:`, err);
                 }
 
-                // Fallback Estimate if USDA search fails
-                return {
-                    name: seg.name,
-                    quantity: seg.quantity,
-                    baseCarbsG: 15,
-                    carbsG: 15 * seg.quantity,
-                    gramsPerUnit: 100,
-                    unitName: '100g',
-                };
+                // Drop garbage input entirely if USDA finds zero matches
+                return null;
             }));
 
             const validItems = results.filter(Boolean) as FinalFoodItem[];
