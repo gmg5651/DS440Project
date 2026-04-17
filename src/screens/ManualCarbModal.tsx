@@ -19,7 +19,9 @@ export default function ManualCarbModal() {
             name: 'Manual Entry',
             carbsG: carbNum,
             quantity: 1,
-            baseCarbsG: carbNum
+            baseCarbsG: carbNum,
+            gramsPerUnit: 100,
+            unitName: 'serving'
         }]);
         setGlucose(isNaN(glucoseNum) ? null : glucoseNum);
 
