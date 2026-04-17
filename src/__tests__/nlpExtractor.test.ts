@@ -23,7 +23,7 @@ it('handles 3/4 of a banana and 1.5 apples', () => {
 it('handles numerical fractions like 2/3', () => {
     const res = segmentMeal('2/3 cups of milk');
     expect(res.segments[0].quantity).toBeCloseTo(0.666, 2);
-    expect(res.segments[0].name).toBe('cups of milk');
+    expect(res.segments[0].name).toBe('milk');
 });
 
 it('handles fractions like half and quarter', () => {

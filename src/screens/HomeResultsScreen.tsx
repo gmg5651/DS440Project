@@ -20,9 +20,12 @@ export default function HomeResultsScreen() {
     const displayGlucose = glucose !== null ? glucose : settings.targetGlucose;
     const displayIcr = icr !== null ? icr : settings.icr;
 
+    const lastSegmented = React.useRef<string | null>(null);
+
     // Legacy segmenter still runs to update glucose if found in text
     useEffect(() => {
-        if (transcript && segments.length === 0) {
+        if (transcript && transcript !== lastSegmented.current && segments.length === 0) {
+            lastSegmented.current = transcript;
             const result = segmentMeal(transcript);
             setSegments(result.segments);
             setGlucose(result.glucose);
