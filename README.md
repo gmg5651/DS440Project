@@ -47,10 +47,12 @@ Start the Expo development server:
 npx expo start
 ```
 This will display a QR code in your terminal. 
-- **Web:** Press the `w` key on your keyboard. Expo will instantly open a new browser tab with your application running!
-- **Physical Device:** Open the Camera app on your iPhone (or use the Expo Go app directly on Android) and scan the QR code to open the app.
-- **Simulator:** Press `i` to open the app in the iOS Simulator (Mac only) or `a` to open it in an Android Emulator.
 
+> **📱 Device Support Note:** The native iOS and Android versions are currently in active development. For the most stable experience and for all demonstrations/grading, **please use the Web version.**
+
+- **Web (Primary MVP/Demo):** Press the `w` key on your keyboard. Expo will instantly open a new browser tab with your application running!
+- **Physical Device (In Progress):** You can preview the experimental mobile app by opening the Camera app on your iPhone (or Expo Go on Android) and scanning the QR code, but note that some native features may require a custom build and aren't fully stable yet.
+- **Simulator (In Progress):** Press `i` to open the app in the iOS Simulator (Mac only) or `a` to open it in an Android Emulator.
 ### Step 5: Run Tests (Verification)
 If you need to verify the code runs perfectly without errors, open a new terminal window inside the project folder and run:
 ```bash
