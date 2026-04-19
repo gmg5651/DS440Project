@@ -25,7 +25,7 @@ Before starting, ensure you have the following installed on your computer:
 ### Step 2: Clone the Repository
 Open a terminal (Mac: Terminal, Windows: Command Prompt or PowerShell) and run the following command to download the code:
 ```bash
-git clone https://github.com/gabegolden/DS440Proj.git
+git clone https://github.com/gmg5651/DS440Proj.git
 ```
 *(Replace the URL above if your repository URL differs).*
 
