@@ -114,7 +114,7 @@ export async function searchUSDAFood(query: string): Promise<USDAMatch | null> {
 }
 
 // ── Step 3 helper: resolve grams per 1 unit for per-item foods ───────────────
-// Strategy (matching ChatGPT advice):
+// Intelligent weighing strategy:
 // 1. unitMapping is the baseline (always sensible)
 // 2. USDA detail call is used as an upgrade when we find amount===1 + clean unit
 async function resolvePortionGrams(

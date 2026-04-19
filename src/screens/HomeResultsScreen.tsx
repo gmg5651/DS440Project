@@ -40,7 +40,7 @@ export default function HomeResultsScreen() {
 
             const results = await Promise.all(segments.map(async (seg) => {
                 try {
-                    // searchAndGetNutrition follows ChatGPT advice:
+                    // searchAndGetNutrition follows strict scoring architecture:
                     // 1. Foundation/SR Legacy datatypes
                     // 2. Similarity ranking
                     // 3. Carbohydrate, by difference
