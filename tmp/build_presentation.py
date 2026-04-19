@@ -211,7 +211,7 @@ for i, (title, body) in enumerate(card_data):
     txbox(slide, body,   x + Inches(0.15), Inches(2.55), Inches(2.7), Inches(1.6),
           size=12.5, color=LIGHT_BG)
 
-txbox(slide, "Cross-platform: iOS  •  Android  •  Web (Progressive Web App)",
+txbox(slide, "Cross-platform Architecture: Web MVP Complete  •  iOS & Android In Progress",
       Inches(0.5), Inches(4.55), Inches(9), Inches(0.4),
       size=13, color=MUTED, align=PP_ALIGN.CENTER)
 
@@ -322,7 +322,7 @@ rows = [
     ("Insulin dose calculator",  "✅ With math", "⚠️ Partial / none"),
     ("Privacy — no data logs",   "✅ Ephemeral", "❌ Data uploaded"),
     ("Works offline (core)",     "✅ SQLite",    "⚠️ Partial"),
-    ("Cross-platform",           "✅ iOS/Android/Web", "⚠️ Varies"),
+    ("Cross-platform",           "✅ Web (Mobile In Progress)", "⚠️ Varies"),
 ]
 row_colors = [RGBColor(0x04, 0x2C, 0x43), RGBColor(0x05, 0x35, 0x50)]
 for r, (feat, us, them) in enumerate(rows):
