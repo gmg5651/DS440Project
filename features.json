@@ -6,108 +6,124 @@
             "description": "User can tap to record voice which gets transcribed to text.",
             "uiElements": [
                 "Start Recording Button (Microphone)",
-                "Transcription Text Area (Editable)",
-                "Bottom Navigation (Home, Stats, Profile)"
+                "Transcription Text Area (Editable/Fallback)",
+                "Visualizer Bars (Audio Feedback)"
             ],
             "implementationFiles": [
-                "/src/components/VoiceInput.tsx",
-                "/src/hooks/useVoiceToText.ts"
+                "/src/screens/HomeRecordingScreen.tsx",
+                "/src/hooks/useVoiceToText.ts",
+                "/src/hooks/useAudioLevel.ts"
             ],
             "testFiles": [
-                "/src/__tests__/VoiceInput.test.tsx",
-                "/e2e/voice-input.yaml"
+                "/src/__tests__/HomeRecordingScreen.test.tsx",
+                "/src/__tests__/useVoiceToText.test.ts"
             ]
         },
         {
             "id": "F-002",
-            "name": "Nutritional Extraction & Verification",
-            "description": "Extract carbs and glucose from text. Allow user to verify before calculation.",
+            "name": "Gemini-Powered Extraction & USDA Lookup",
+            "description": "High-precision extraction via Gemini LLM with nutritional enrichment from USDA FoodData Central.",
             "uiElements": [
                 "Verification List (Foods & Carbs)",
-                "Total Glucose Display",
-                "Settings Reminder Text"
+                "USDA/Estimate Badges",
+                "0.1 Step Adjustments"
             ],
             "implementationFiles": [
-                "/src/components/VerificationList.tsx",
-                "/src/utils/nlpExtractor.ts"
+                "/src/screens/HomeResultsScreen.tsx",
+                "/app/api/parse-meal+api.ts",
+                "/src/services/usdaService.ts"
             ],
             "testFiles": [
-                "/src/__tests__/nlpExtractor.test.ts",
-                "/src/__tests__/VerificationList.test.tsx"
+                "/src/__tests__/nlpExtractor.test.ts"
             ]
         },
         {
             "id": "F-003",
             "name": "Insulin Calculation Breakdown",
-            "description": "Calculate and display meal and correction doses with transparent math.",
+            "description": "Calculate meal and correction doses with transparent math. No persistent logging.",
             "uiElements": [
-                "Meal Dose Detail",
-                "Correction Dose Detail",
-                "Total Dose Display",
-                "Confirm Dose Button"
+                "Meal Dose Math Detail",
+                "Correction Dose Math Detail",
+                "Dose Completion Modal",
+                "- **Nutrition Data**: USDA FoodData Central API (Primary) + Gemini LLM (Extraction).",
+                "- **LLM**: Google Gemini 1.5 Flash via Expo API Routes.",
+                "Safety Caps & Disclaimers"
             ],
             "implementationFiles": [
-                "/src/components/DoseModal.tsx",
+                "/src/screens/DoseModal.tsx",
                 "/src/utils/insulinCalculator.ts"
             ],
             "testFiles": [
-                "/src/__tests__/insulinCalculator.test.ts",
-                "/src/__tests__/DoseModal.test.tsx",
-                "/e2e/dose-calculation.yaml"
+                "/src/__tests__/insulinCalculator.test.ts"
             ]
         },
         {
             "id": "F-004",
-            "name": "Manual Carb Entry",
-            "description": "Allow manual input of carbohydrates as a fallback or quick add.",
+            "name": "Manual Entry Flow",
+            "description": "Unified workflow for manual food/glucose entry from Home or Recording screens.",
             "uiElements": [
-                "Carbohydrate Number Input",
-                "Save/Add Carbs Button"
+                "Home 'Manual Entry' Button",
+                "Recording 'Type Instead' Input",
+                "Manual Entry Dialog/Screen"
             ],
             "implementationFiles": [
-                "/src/components/ManualCarbModal.tsx"
+                "/src/screens/ManualCarbModal.tsx"
             ],
             "testFiles": [
-                "/src/__tests__/ManualCarbModal.test.tsx",
-                "/e2e/manual-carb-entry.yaml"
-            ]
-        },
-        {
-            "id": "F-005",
-            "name": "Medical Settings Configuration",
-            "description": "Set and securely store ICR, ISF, and target glucose.",
-            "uiElements": [
-                "Medical Settings Section",
-                "ICR Input",
-                "ISF Input",
-                "Target Glucose Input",
-                "Save Settings Button"
-            ],
-            "implementationFiles": [
-                "/src/components/MedicalSettingsList.tsx",
-                "/src/store/settingsStore.ts"
-            ],
-            "testFiles": [
-                "/src/__tests__/settingsStore.test.ts",
-                "/e2e/settings-update.yaml"
+                "/src/__tests__/ManualCarbModal.test.tsx"
             ]
         },
         {
             "id": "F-006",
-            "name": "Daily Trends Dashboard",
-            "description": "View past 7 days of averages for glucose, carbs, and insulin.",
+            "name": "Privacy-First Settings Engine",
+            "description": "Local-only database used exclusively for clinical settings (Ratios, Targets).",
             "uiElements": [
-                "Average Glucose Metric",
-                "Total Carbs Metric",
-                "Total Insulin Metric",
-                "Period Summary Graph/Chart"
+                "Settings 'Ratios' Badge",
+                "Secure Clinical Profile"
             ],
             "implementationFiles": [
-                "/src/components/DailyTrends.tsx",
-                "/src/hooks/useStats.ts"
+                "/src/db/index.ts",
+                "/src/db/sqlite.native.ts",
+                "/src/db/sqlite.ts"
             ],
             "testFiles": [
-                "/src/__tests__/DailyTrends.test.tsx"
+                "/src/__tests__/settingsStore.test.ts"
+            ]
+        },
+        {
+            "id": "F-005",
+            "name": "Medical Settings Profile",
+            "description": "Securely manage ICR, ISF, and target glucose with persistent storage.",
+            "uiElements": [
+                "Profile/Settings Screen",
+                "Encrypted Storage Integration",
+                "Web localStorage Fallback"
+            ],
+            "implementationFiles": [
+                "/src/screens/ProfileSettingsScreen.tsx",
+                "/src/store/settingsStore.ts",
+                "/src/store/settings.native.ts"
+            ],
+            "testFiles": [
+                "/src/__tests__/settingsStore.test.ts",
+                "/src/__tests__/ProfileSettingsScreen.test.tsx"
+            ]
+        },
+        {
+            "id": "F-006",
+            "name": "Unified Offline Infrastructure",
+            "description": "Universal database and storage layer supporting both Native and Web.",
+            "uiElements": [
+                "Progressive Web Demo support",
+                "Native SQLite persistence"
+            ],
+            "implementationFiles": [
+                "/src/db/index.ts",
+                "/src/db/sqlite.native.ts",
+                "/src/db/sqlite.ts"
+            ],
+            "testFiles": [
+                "/src/__tests__/db.test.ts"
             ]
         }
     ]

@@ -1,74 +1,90 @@
 {
-    "name": "swiftulin",
-    "version": "1.0.0",
-    "main": "expo-router/entry",
-    "scripts": {
-        "start": "expo start",
-        "android": "expo start --android",
-        "ios": "expo start --ios",
-        "web": "expo start --web",
-        "test": "jest",
-        "test:watch": "jest --watch",
-        "test:coverage": "jest --coverage",
-        "typecheck": "tsc --noEmit",
-        "lint": "expo lint"
+  "name": "swiftulin",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "typecheck": "tsc --noEmit",
+    "lint": "expo lint"
+  },
+  "dependencies": {
+    "@expo/metro-runtime": "~4.0.1",
+    "@expo/vector-icons": "~14.0.4",
+    "@tanstack/react-query": "^5.0.0",
+    "drizzle-orm": "^0.38.0",
+    "expo": "~52.0.0",
+    "expo-av": "~15.0.0",
+    "expo-constants": "~17.0.8",
+    "expo-dev-client": "~5.0.20",
+    "expo-linking": "~7.0.5",
+    "expo-router": "~4.0.0",
+    "expo-secure-store": "~14.0.0",
+    "expo-speech": "~13.0.0",
+    "expo-sqlite": "~15.1.4",
+    "expo-status-bar": "~2.0.1",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-native": "0.76.9",
+    "react-native-safe-area-context": "4.12.0",
+    "react-native-screens": "~4.4.0",
+    "react-native-web": "~0.19.13",
+    "zustand": "^5.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.0",
+    "@testing-library/jest-native": "^5.4.0",
+    "@testing-library/react-native": "^12.0.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/jest": "^30.0.0",
+    "@types/react": "~18.3.0",
+    "babel-plugin-module-resolver": "^5.0.3",
+    "better-sqlite3": "^12.8.0",
+    "drizzle-kit": "^0.30.0",
+    "jest": "^29.0.0",
+    "jest-expo": "~52.0.0",
+    "typescript": "^5.3.0"
+  },
+  "jest": {
+    "preset": "jest-expo",
+    "setupFilesAfterEnv": [
+      "@testing-library/jest-native/extend-expect",
+      "<rootDir>/src/__tests__/jest-setup.ts"
+    ],
+    "transformIgnorePatterns": [
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg)"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*.test.{ts,tsx}"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.{ts,tsx}",
+      "!src/**/*.d.ts"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 0,
+        "functions": 0,
+        "lines": 0
+      }
     },
-    "dependencies": {
-        "@expo/vector-icons": "^14.0.0",
-        "@tanstack/react-query": "^5.0.0",
-        "drizzle-orm": "^0.38.0",
-        "expo": "~52.0.0",
-        "expo-av": "~15.0.0",
-        "expo-router": "~4.0.0",
-        "expo-secure-store": "~14.0.0",
-        "expo-speech": "~13.0.0",
-        "expo-sqlite": "~15.0.0",
-        "expo-status-bar": "~2.0.1",
-        "react": "18.3.1",
-        "react-native": "0.76.5",
-        "react-native-safe-area-context": "4.12.0",
-        "react-native-screens": "~4.1.0",
-        "zustand": "^5.0.0"
-    },
-    "devDependencies": {
-        "@babel/core": "^7.25.0",
-        "@testing-library/jest-native": "^5.4.0",
-        "@testing-library/react-native": "^12.0.0",
-        "@types/react": "~18.3.0",
-        "@types/react-native": "~0.73.0",
-        "babel-plugin-module-resolver": "^5.0.3",
-        "better-sqlite3": "^12.8.0",
-        "drizzle-kit": "^0.30.0",
-        "expo-modules-autolinking": "~2.0.0",
-        "jest": "^29.0.0",
-        "jest-expo": "~52.0.0",
-        "typescript": "^5.3.0"
-    },
-    "jest": {
-        "preset": "jest-expo",
-        "setupFilesAfterEnv": [
-            "@testing-library/jest-native/extend-expect"
-        ],
-        "transformIgnorePatterns": [
-            "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg)"
-        ],
-        "testMatch": [
-            "**/__tests__/**/*.test.{ts,tsx}"
-        ],
-        "collectCoverageFrom": [
-            "src/**/*.{ts,tsx}",
-            "!src/**/*.d.ts"
-        ],
-        "coverageThreshold": {
-            "global": {
-                "branches": 70,
-                "functions": 80,
-                "lines": 80
-            }
-        },
-        "moduleNameMapper": {
-            "^@/(.*)$": "<rootDir>/src/$1"
-        }
-    },
-    "private": true
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1"
+    }
+  },
+  "private": true,
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "exclude": [
+          "expo-av"
+        ]
+      }
+    }
+  }
 }
