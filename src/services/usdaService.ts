@@ -1,7 +1,7 @@
 import { calculateSimilarity } from '@/utils/stringSimilarity';
 import { getGramsPerUnit } from '@/utils/unitMapping';
 
-const API_KEY = process.env.EXPO_PUBLIC_USDA_API_KEY;
+const API_KEY = process.env.EXPO_PUBLIC_USDA_API_KEY || 'CcJFm0ejWXBJSWWIPWp19eHz4HoNCCRvsZaRAYto';
 const BASE_URL = 'https://api.nal.usda.gov/fdc/v1';
 
 export interface USDAMatch {

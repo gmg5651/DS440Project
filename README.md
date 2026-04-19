@@ -14,6 +14,5 @@
 
 ## Getting Started
 1. Install dependencies: `npm install`
-2. Set up environment: Copy `.env.example` to `.env` and add FatSecret credentials.
-3. Start the app: `npx expo start`
-4. Run tests: `npm test`
+2. Start the dev server: `npx expo start`
+3. Run tests: `npm test`
