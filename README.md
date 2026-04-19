@@ -47,6 +47,7 @@ Start the Expo development server:
 npx expo start
 ```
 This will display a QR code in your terminal. 
+- **Web:** Press the `w` key on your keyboard. Expo will instantly open a new browser tab with your application running!
 - **Physical Device:** Open the Camera app on your iPhone (or use the Expo Go app directly on Android) and scan the QR code to open the app.
 - **Simulator:** Press `i` to open the app in the iOS Simulator (Mac only) or `a` to open it in an Android Emulator.
 
