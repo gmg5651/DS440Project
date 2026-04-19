@@ -9,7 +9,7 @@
 
 ## Technical Blueprint
 - **Voice Engine**: Expo Voice + custom NLP extractor with fractional support.
-- **Nutritional Data**: FatSecret API with robust local fallbacks.
+- **Nutritional Data**: USDA FoodData Central API with robust local fallbacks.
 - **Architecture**: Zustand for flow state, React Query for API data, and SQLite (via Drizzle) for clinical settings.
 
 ## Getting Started (Step-by-Step for Beginners)
