@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useVoiceToText } from '@/hooks/useVoiceToText';
 import { useAudioLevel } from '@/hooks/useAudioLevel';
 import { useFlowStore } from '@/store/flowStore';
@@ -42,47 +42,49 @@ export default function HomeRecordingScreen() {
                 {error && <Text style={styles.errorText}>Error: {error}</Text>}
             </View>
 
-            <Text style={styles.title}>
-                {status === 'listening' ? 'Speak Food Items...' : 'Processing...'}
-            </Text>
+            <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" style={{ flex: 1, width: '100%' }}>
+                <Text style={styles.title}>
+                    {status === 'listening' ? 'Speak Food Items...' : 'Processing...'}
+                </Text>
 
-            <View style={styles.transcriptContainer}>
-                <TextInput
-                    style={styles.transcriptInput}
-                    multiline
-                    placeholder='Describe your meal (e.g. "I had a salad and a coke")'
-                    placeholderTextColor="#666"
-                    value={transcript}
-                    onChangeText={setTranscript}
-                    autoFocus
-                />
-            </View>
-
-            <View style={styles.visualizerContainer}>
-                {[1, 2, 3, 4, 5].map((i) => (
-                    <View
-                        key={i}
-                        style={[
-                            styles.visualizerBar,
-                            { height: status === 'listening' ? 10 + (Math.random() * 30 * (transcript.length > 0 ? 1.5 : 1)) : 10 }
-                        ]}
+                <View style={styles.transcriptContainer}>
+                    <TextInput
+                        style={styles.transcriptInput}
+                        multiline
+                        placeholder='Describe your meal (e.g. "I had a salad and a coke")'
+                        placeholderTextColor="#666"
+                        value={transcript}
+                        onChangeText={setTranscript}
+                        autoFocus
                     />
-                ))}
-            </View>
+                </View>
 
-            <TouchableOpacity
-                style={styles.stopButton}
-                testID="btn-stop-recording"
-                onPress={handleStop}
-            >
-                <Text style={styles.stopText}>⏹ Finish & Verify</Text>
-            </TouchableOpacity>
+                <View style={styles.visualizerContainer}>
+                    {[1, 2, 3, 4, 5].map((i) => (
+                        <View
+                            key={i}
+                            style={[
+                                styles.visualizerBar,
+                                { height: status === 'listening' ? 10 + (Math.random() * 30 * (transcript.length > 0 ? 1.5 : 1)) : 10 }
+                            ]}
+                        />
+                    ))}
+                </View>
 
-            {status === 'error' && (
-                <TouchableOpacity onPress={startRecording} style={styles.retryButton}>
-                    <Text style={styles.retryText}>Retry Microphone</Text>
+                <TouchableOpacity
+                    style={styles.stopButton}
+                    testID="btn-stop-recording"
+                    onPress={handleStop}
+                >
+                    <Text style={styles.stopText}>⏹ Finish & Verify</Text>
                 </TouchableOpacity>
-            )}
+
+                {status === 'error' && (
+                    <TouchableOpacity onPress={startRecording} style={styles.retryButton}>
+                        <Text style={styles.retryText}>Retry Microphone</Text>
+                    </TouchableOpacity>
+                )}
+            </ScrollView>
         </KeyboardAvoidingView>
     );
 }
@@ -91,9 +93,14 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#0a0a0a',
+        alignItems: 'center',
+    },
+    scrollContent: {
+        flexGrow: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 24
+        padding: 24,
+        paddingTop: 100, // space for absolute elements
     },
     debugHeader: {
         position: 'absolute',

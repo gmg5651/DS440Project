@@ -51,7 +51,8 @@
         }
       ],
       "expo-font",
-      "expo-asset"
+      "expo-asset",
+      "expo-speech-recognition"
     ],
     "experiments": {
       "typedRoutes": true,
