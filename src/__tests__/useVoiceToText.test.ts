@@ -3,6 +3,16 @@ jest.mock('expo-speech', () => ({ speak: jest.fn() }));
 import { renderHook, act } from '@testing-library/react-native';
 import { useVoiceToText } from '@/hooks/useVoiceToText';
 
+beforeEach(() => {
+    jest.spyOn(console, 'log').mockImplementation(() => {});
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+});
+
+afterEach(() => {
+    jest.restoreAllMocks();
+});
+
 test('initial state is idle', () => {
     const { result } = renderHook(() => useVoiceToText());
     expect(result.current.status).toBe('idle');
