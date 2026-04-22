@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { 
-    View, Text, TouchableOpacity, StyleSheet, TextInput, 
+import {
+    View, Text, TouchableOpacity, StyleSheet, TextInput,
     KeyboardAvoidingView, Platform, ScrollView, SafeAreaView
 } from 'react-native';
 import { useVoiceToText } from '@/hooks/useVoiceToText';
@@ -33,11 +33,11 @@ export default function HomeRecordingScreen() {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <KeyboardAvoidingView 
-                style={styles.keyboardAvoid} 
+            <KeyboardAvoidingView
+                style={styles.keyboardAvoid}
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             >
-                <ScrollView 
+                <ScrollView
                     style={styles.scrollView}
                     contentContainerStyle={styles.scrollContent}
                     keyboardShouldPersistTaps="handled"
@@ -49,7 +49,7 @@ export default function HomeRecordingScreen() {
                             <Text style={styles.warningText}>⚠️ Voice requires HTTPS or localhost.</Text>
                         </View>
                     )}
-                    
+
                     <View style={styles.header}>
                         <Text style={styles.debugText}>STATUS: {status.toUpperCase()}</Text>
                         {error && <Text style={styles.errorText}>Error: {error}</Text>}
@@ -91,7 +91,7 @@ export default function HomeRecordingScreen() {
                         testID="btn-stop-recording"
                         onPress={handleStop}
                     >
-                        <Text style={styles.stopText}>⏹ Finish & Verify</Text>
+                        <Text style={styles.stopText}>Finish & Verify</Text>
                     </TouchableOpacity>
 
                     {status === 'error' && (
