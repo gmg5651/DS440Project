@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { useFlowStore, FinalFoodItem } from '@/store/flowStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { segmentMeal } from '@/utils/nlpExtractor';
@@ -79,7 +79,10 @@ export default function HomeResultsScreen() {
     });
 
     return (
-        <View style={styles.container}>
+        <KeyboardAvoidingView 
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+            style={styles.container}
+        >
             <Text style={styles.title}>Verification</Text>
 
             {transcript ? (
@@ -183,7 +186,7 @@ export default function HomeResultsScreen() {
             >
                 <Text style={styles.calcText}>Calculate Dose</Text>
             </TouchableOpacity>
-        </View>
+        </KeyboardAvoidingView>
     );
 }
 

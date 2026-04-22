@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { useVoiceToText } from '@/hooks/useVoiceToText';
 import { useFlowStore } from '@/store/flowStore';
@@ -19,64 +19,66 @@ export default function HomeStartScreen() {
     };
 
     return (
-        <View style={styles.container}>
-            <TouchableOpacity
-                style={styles.settingsHeaderBtn}
-                onPress={() => router.push('/settings')}
-            >
-                <View style={[styles.settingsBadge, needsSetup && styles.needsSetupBadge]}>
-                    <Text style={styles.settingsIcon}>⚙️</Text>
-                    <Text style={styles.settingsText}>Ratios</Text>
-                    {needsSetup && <View style={styles.actionDot} />}
-                </View>
-                {needsSetup && <Text style={styles.setupHint}>First-time set up?</Text>}
-            </TouchableOpacity>
-
-            <Text style={styles.title}>Swiftulin</Text>
-            <Text style={styles.subtitle}>Your Private Insulin Dosing Assistant</Text>
-
-            {needsSetup && (
+        <View style={{ flex: 1, backgroundColor: '#0a0a0a' }}>
+            <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
                 <TouchableOpacity
-                    style={styles.setupBanner}
+                    style={styles.settingsHeaderBtn}
                     onPress={() => router.push('/settings')}
-                    activeOpacity={0.85}
                 >
-                    <Text style={styles.setupBannerIcon}>⚠️</Text>
-                    <View style={styles.setupBannerText}>
-                        <Text style={styles.setupBannerTitle}>Set your personal ratios first</Text>
-                        <Text style={styles.setupBannerBody}>Your ICR and ISF directly affect your dose. Tap here to personalize before logging a meal.</Text>
+                    <View style={[styles.settingsBadge, needsSetup && styles.needsSetupBadge]}>
+                        <Text style={styles.settingsIcon}>⚙️</Text>
+                        <Text style={styles.settingsText}>Ratios</Text>
+                        {needsSetup && <View style={styles.actionDot} />}
                     </View>
-                    <Text style={styles.setupBannerArrow}>›</Text>
+                    {needsSetup && <Text style={styles.setupHint}>First-time set up?</Text>}
                 </TouchableOpacity>
-            )}
-            <TouchableOpacity
-                style={styles.micButton}
-                testID="btn-start-recording"
-                onPress={handleStart}>
-                <Text style={styles.micIcon}>🎙️</Text>
-            </TouchableOpacity>
 
-            <Text style={styles.micLabel}>Tap to speak your meal</Text>
+                <Text style={styles.title}>Swiftulin</Text>
+                <Text style={styles.subtitle}>Your Private Insulin Dosing Assistant</Text>
 
-            <TouchableOpacity
-                style={styles.manualButton}
-                onPress={() => router.push('/manual-carb')}>
-                <Text style={styles.manualText}>⌨️ Manual Entry</Text>
-            </TouchableOpacity>
+                {needsSetup && (
+                    <TouchableOpacity
+                        style={styles.setupBanner}
+                        onPress={() => router.push('/settings')}
+                        activeOpacity={0.85}
+                    >
+                        <Text style={styles.setupBannerIcon}>⚠️</Text>
+                        <View style={styles.setupBannerText}>
+                            <Text style={styles.setupBannerTitle}>Set your personal ratios first</Text>
+                            <Text style={styles.setupBannerBody}>Your ICR and ISF directly affect your dose. Tap here to personalize before logging a meal.</Text>
+                        </View>
+                        <Text style={styles.setupBannerArrow}>›</Text>
+                    </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                    style={styles.micButton}
+                    testID="btn-start-recording"
+                    onPress={handleStart}>
+                    <Text style={styles.micIcon}>🎙️</Text>
+                </TouchableOpacity>
 
-            <View style={styles.examplesContainer}>
-                <Text style={styles.examplesTitle}>Try saying things like:</Text>
-                <Text style={styles.exampleText}>• "I had two slices of pizza and a salad"</Text>
-                <Text style={styles.exampleText}>• "One large apple and a cup of milk"</Text>
-                <Text style={styles.exampleText}>• "1.5 oranges and 10 oz of juice"</Text>
-            </View>
-        </View >
+                <Text style={styles.micLabel}>Tap to speak your meal</Text>
+
+                <TouchableOpacity
+                    style={styles.manualButton}
+                    onPress={() => router.push('/manual-carb')}>
+                    <Text style={styles.manualText}>⌨️ Manual Entry</Text>
+                </TouchableOpacity>
+
+                <View style={styles.examplesContainer}>
+                    <Text style={styles.examplesTitle}>Try saying things like:</Text>
+                    <Text style={styles.exampleText}>• "I had two slices of pizza and a salad"</Text>
+                    <Text style={styles.exampleText}>• "One large apple and a cup of milk"</Text>
+                    <Text style={styles.exampleText}>• "1.5 oranges and 10 oz of juice"</Text>
+                </View>
+            </ScrollView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
+        flexGrow: 1,
         backgroundColor: '#0a0a0a',
         alignItems: 'center',
         justifyContent: 'center',
