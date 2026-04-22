@@ -19,15 +19,21 @@ test('initial state is idle', () => {
     expect(result.current.transcript).toBe('');
 });
 
-test('start recording sets status to listening', () => {
+test('start recording sets status to listening', async () => {
     const { result } = renderHook(() => useVoiceToText());
-    act(() => result.current.startRecording());
+    await act(async () => {
+        await result.current.startRecording();
+    });
     expect(result.current.status).toBe('listening');
 });
 
-test('stop recording sets status to done', () => {
+test('stop recording sets status to done', async () => {
     const { result } = renderHook(() => useVoiceToText());
-    act(() => result.current.startRecording());
-    act(() => result.current.stopRecording());
+    await act(async () => {
+        await result.current.startRecording();
+    });
+    act(() => {
+        result.current.stopRecording();
+    });
     expect(result.current.status).toBe('done');
 });

@@ -45,3 +45,28 @@ jest.mock('drizzle-orm/expo-sqlite', () => ({
         delete: jest.fn(() => ({ where: jest.fn(() => Promise.resolve()) })),
     })),
 }));
+
+// Mock expo-speech-recognition
+const speechListeners: Record<string, Function> = {};
+jest.mock('expo-speech-recognition', () => ({
+    ExpoSpeechRecognitionModule: {
+        requestPermissionsAsync: jest.fn(() => Promise.resolve({ granted: true })),
+        start: jest.fn(() => {
+            if (speechListeners['start']) speechListeners['start']();
+        }),
+        stop: jest.fn(() => {
+            // Usually stopping doesn't trigger end immediately, but for tests this is fine
+            if (speechListeners['end']) speechListeners['end']();
+        }),
+    },
+    useSpeechRecognitionEvent: jest.fn((event: string, callback: Function) => {
+        // React's useLayoutEffect/useEffect equivalent for tests
+        const React = require('react');
+        React.useEffect(() => {
+            speechListeners[event] = callback;
+            return () => {
+                delete speechListeners[event];
+            };
+        }, [event, callback]);
+    }),
+}));
