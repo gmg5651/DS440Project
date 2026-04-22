@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
     View, Text, TouchableOpacity, StyleSheet, TextInput,
-    KeyboardAvoidingView, Platform, ScrollView, SafeAreaView
+    KeyboardAvoidingView, Platform, ScrollView
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useVoiceToText } from '@/hooks/useVoiceToText';
 import { useAudioLevel } from '@/hooks/useAudioLevel';
 import { useFlowStore } from '@/store/flowStore';
