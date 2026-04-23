@@ -8,7 +8,7 @@
 3. **Safety First**: Transparent math displays every step of the dose calculation (ICR + ISF).
 
 ## Technical Blueprint
-- **Voice Engine**: Expo Voice + custom NLP extractor with fractional support.
+- **Voice Engine**: expo-speech-recognition + custom NLP extractor with fractional support.
 - **Nutritional Data**: USDA FoodData Central API with robust local fallbacks.
 - **Architecture**: Zustand for flow state, React Query for API data, and SQLite (via Drizzle) for clinical settings.
 
@@ -56,4 +56,3 @@ If you need to verify the code runs perfectly without errors, open a new termina
 ```bash
 npm test
 ```
-You will see 21 passing test cases ensuring everything works under the hood.
