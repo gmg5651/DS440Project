@@ -14,7 +14,7 @@
 
 ## Getting Started (Step-by-Step for Beginners)
 
-This section provides a foolproof, step-by-step guide to cloning, setting up, and running this project on a brand-new computer. There are absolutely **no API keys or .env files required** to run this app—it is pre-configured to authenticate securely without manual setup.
+This section provides a foolproof, step-by-step guide to cloning, setting up, and running this project on a brand-new computer. While the app is pre-configured to work out of the box, you can optionally use your own USDA FoodData API key for higher rate limits.
 
 ### Step 1: Prerequisites
 Before starting, ensure you have the following installed on your computer:
@@ -40,6 +40,18 @@ Inside the project folder, install all required packages by running:
 npm install
 ```
 *(This might take a minute or two depending on your internet connection).*
+
+### Step 3.5: Configure API Key (Optional)
+If you would like to use your own USDA FoodData API key for production use or higher rate limits:
+1. Obtain an API key from the [USDA FoodData Central API Guide](https://fdc.nal.usda.gov/api-guide.html).
+2. Create a `.env` file from the example template:
+   ```bash
+   cp .env.example .env
+   ```
+3. Open the newly created `.env` file and replace `DEMO_KEY` with your actual API key:
+   ```
+   EXPO_PUBLIC_USDA_API_KEY=your_key_here
+   ```
 
 ### Step 4: Run the Application
 Start the Expo development server:
