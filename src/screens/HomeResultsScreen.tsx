@@ -60,7 +60,7 @@ export default function HomeResultsScreen() {
                             gramsPerUnit: seg.gramsOverride != null
                                 ? seg.gramsOverride / seg.quantity
                                 : match.gramsPerUnit,
-                            unitName: match.unitName,
+                            unitName: seg.unit || match.unitName,
                         };
                     }
                 } catch (err) {

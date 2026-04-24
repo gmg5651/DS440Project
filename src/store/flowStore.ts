@@ -7,7 +7,7 @@ export interface FinalFoodItem {
     quantity: number;
     baseCarbsG: number;   // carbs per 100g (USDA)
     gramsPerUnit: number; // gram weight for 1 portion (e.g. 110g for 1 banana)
-    unitName: string;     // human label (e.g. "Banana", "1 medium")
+    unitName: string;     // human label (e.g. "Banana", "1 medium", "tsp")
 }
 
 interface FlowState {
