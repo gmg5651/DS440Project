@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useFlowStore } from '@/store/flowStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -49,7 +50,8 @@ export default function DoseModal() {
     if (!dose) return null;
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.safeArea}>
+            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             <Text style={styles.title}>Insulin Recommendation</Text>
 
             <View style={styles.card}>
@@ -111,12 +113,14 @@ export default function DoseModal() {
                     <Text style={styles.cancelText}>Check Settings</Text>
                 </View>
             </TouchableOpacity>
-        </View>
+            </ScrollView>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#0a0a0a', padding: 24, justifyContent: 'center' },
+    safeArea: { flex: 1, backgroundColor: '#0a0a0a' },
+    scrollContent: { flexGrow: 1, padding: 24, justifyContent: 'center' },
     title: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: 32, textAlign: 'center' },
     card: { backgroundColor: '#1c1c1e', padding: 24, borderRadius: 20, marginBottom: 24, borderWidth: 1, borderColor: '#2c2c2e' },
     row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },

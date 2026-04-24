@@ -1,7 +1,7 @@
 import { calculateSimilarity } from '@/utils/stringSimilarity';
 import { getGramsPerUnit } from '@/utils/unitMapping';
 
-const API_KEY = process.env.EXPO_PUBLIC_USDA_API_KEY || 'CcJFm0ejWXBJSWWIPWp19eHz4HoNCCRvsZaRAYto';
+const API_KEY = process.env.EXPO_PUBLIC_USDA_API_KEY || 'DEMO_KEY';
 const BASE_URL = 'https://api.nal.usda.gov/fdc/v1';
 
 export interface USDAMatch {
@@ -31,7 +31,10 @@ export async function searchUSDAFood(query: string): Promise<USDAMatch | null> {
         }),
     });
 
-    if (!response.ok) throw new Error(`USDA Search failed: ${response.status}`);
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`USDA Search failed: ${response.status} - ${errText}`);
+    }
 
     const data = await response.json();
     const foods: any[] = data.foods || [];
@@ -67,6 +70,13 @@ export async function searchUSDAFood(query: string): Promise<USDAMatch | null> {
 
         // C. Exact/plural bonus
         if (desc === q || desc === q + 's' || desc + 's' === q) sim += 0.5;
+
+        // C2. Primary word bonus – heavy boost if the text before the first comma is the query
+        // This makes "Milk" match "Milk, whole" instead of "Yogurt, with whole milk"
+        const primaryWord = desc.split(',')[0].trim();
+        if (primaryWord === q || primaryWord === q + 's' || (q.endsWith('s') && primaryWord === q.slice(0, -1))) {
+            sim += 0.45;
+        }
 
         // D. "raw" bonus – simple, unprocessed
         if (desc.includes('raw')) sim += 0.1;

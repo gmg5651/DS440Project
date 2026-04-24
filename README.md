@@ -8,13 +8,13 @@
 3. **Safety First**: Transparent math displays every step of the dose calculation (ICR + ISF).
 
 ## Technical Blueprint
-- **Voice Engine**: Expo Voice + custom NLP extractor with fractional support.
+- **Voice Engine**: expo-speech-recognition + custom NLP extractor with fractional support.
 - **Nutritional Data**: USDA FoodData Central API with robust local fallbacks.
 - **Architecture**: Zustand for flow state, React Query for API data, and SQLite (via Drizzle) for clinical settings.
 
 ## Getting Started (Step-by-Step for Beginners)
 
-This section provides a foolproof, step-by-step guide to cloning, setting up, and running this project on a brand-new computer. There are absolutely **no API keys or .env files required** to run this app—it is pre-configured to authenticate securely without manual setup.
+This section provides a foolproof, step-by-step guide to cloning, setting up, and running this project on a brand-new computer. While the app is pre-configured to work out of the box, you can optionally use your own USDA FoodData API key for higher rate limits.
 
 ### Step 1: Prerequisites
 Before starting, ensure you have the following installed on your computer:
@@ -41,6 +41,18 @@ npm install
 ```
 *(This might take a minute or two depending on your internet connection).*
 
+### Step 3.5: Configure API Key (Optional)
+If you would like to use your own USDA FoodData API key for production use or higher rate limits:
+1. Obtain an API key from the [USDA FoodData Central API Guide](https://fdc.nal.usda.gov/api-guide.html).
+2. Create a `.env` file from the example template:
+   ```bash
+   cp .env.example .env
+   ```
+3. Open the newly created `.env` file and replace `DEMO_KEY` with your actual API key:
+   ```
+   EXPO_PUBLIC_USDA_API_KEY=your_key_here
+   ```
+
 ### Step 4: Run the Application
 Start the Expo development server:
 ```bash
@@ -58,4 +70,3 @@ If you need to verify the code runs perfectly without errors, open a new termina
 ```bash
 npm test
 ```
-You will see 21 passing test cases ensuring everything works under the hood.

@@ -11,6 +11,11 @@ const queryClient = new QueryClient({
     },
 });
 
+afterAll(() => {
+    queryClient.clear();
+    queryClient.unmount();
+});
+
 test('renders Verification title and Calculate Dose CTA', () => {
     const { getByTestId, getByText } = render(
         <QueryClientProvider client={queryClient}>

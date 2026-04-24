@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSettingsStore } from '@/store/settingsStore';
 import { router } from 'expo-router';
 
@@ -24,7 +25,17 @@ export default function ProfileSettingsScreen() {
     };
 
     return (
-        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <SafeAreaView style={styles.safeArea}>
+            <KeyboardAvoidingView 
+                style={styles.keyboardAvoid} 
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            >
+                <ScrollView 
+                    style={styles.scrollView} 
+                    contentContainerStyle={styles.content}
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                >
             <Text style={styles.title}>Personal Ratios</Text>
 
             <View style={styles.infoBox}>
@@ -119,14 +130,18 @@ export default function ProfileSettingsScreen() {
             >
                 <Text style={styles.saveText}>Save Configuration</Text>
             </TouchableOpacity>
-        </ScrollView>
+                </ScrollView>
+            </KeyboardAvoidingView>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#0a0a0a' },
+    safeArea: { flex: 1, backgroundColor: '#0a0a0a' },
+    keyboardAvoid: { flex: 1 },
+    scrollView: { flex: 1 },
     content: { padding: 24, paddingBottom: 60 },
-    title: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: 32, marginTop: 40 },
+    title: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: 32, marginTop: 20 },
     section: { marginBottom: 32, backgroundColor: '#1c1c1e', padding: 20, borderRadius: 16 },
     sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#007AFF', marginBottom: 20 },
     label: { fontSize: 14, color: '#aaa', marginBottom: 8 },

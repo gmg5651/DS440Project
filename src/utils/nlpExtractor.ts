@@ -44,33 +44,50 @@ const UNIT_CANONICAL: Record<string, string> = {
 const NUMBER_WORDS: Record<string, number> = {
     'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
     'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10,
-    'half': 0.5, 'quarter': 0.25, 'third': 0.33, 'a': 1, 'an': 1
+    'half': 0.5, 'quarter': 0.25, 'third': 0.33, 'a': 1, 'an': 1,
+    'fourth': 0.25, 'fourths': 0.25, 'fifth': 0.2, 'fifths': 0.2,
+    'sixth': 0.166, 'sixths': 0.166, 'eighth': 0.125, 'eighths': 0.125,
 };
 
+const NUM_WORDS_LIST = '(?:one|two|three|four|five|six|seven|eight|nine|ten|a|an)';
+const FRAC_WORDS_LIST = '(?:half|quarter|third|fourth|fifth|sixth|eighth)s?';
+
 export function segmentMeal(utterance: string): ExtractionResult {
-    const lower = utterance.toLowerCase().trim();
+    let lower = utterance.toLowerCase().trim();
     if (!lower || lower.length < 3) return { segments: [], glucose: null, confidence: 0 };
 
-    const segments: FoodSegment[] = [];
+    // 0. Extract and STRIP Glucose/Blood Sugar readings at the very start
+    // This prevents phrases like "my glucose is 120" from ever being processed as food
     let glucose: number | null = null;
+    const glucoseReadingPattern = /\b(?:my\s+)?(?:glucose|sugar|blood\s+sugar|level|reading|my\s+sugar)\s+(?:is|was|at|of)?\s*(\d+)\b|\b(\d+)\s*(?:mg\/dl|mgdl)\b/gi;
+    
+    let gMatch;
+    while ((gMatch = glucoseReadingPattern.exec(lower)) !== null) {
+        glucose = parseInt(gMatch[1] || gMatch[2]);
+    }
+    lower = lower.replace(glucoseReadingPattern, '').trim();
 
-    // 1. Extract glucose
-    const glucoseMatch = lower.match(/(?:glucose|sugar|level)\s+(?:is\s+)?(\d+)/) || lower.match(/(\d+)\s+(?:mg\/dl|mgdl)/);
-    if (glucoseMatch) glucose = parseInt(glucoseMatch[1]);
+    // 0.1 Pre-process "point" as a decimal (e.g. "one point five" -> "1.5")
+    lower = lower.replace(/\b(one|two|three|four|five|six|seven|eight|nine|ten)\s+point\s+(one|two|three|four|five|six|seven|eight|nine|ten)\b/gi, (m, p1, p2) => {
+        const n1 = NUMBER_WORDS[p1.toLowerCase()] ?? 1;
+        const n2 = NUMBER_WORDS[p2.toLowerCase()] ?? 0;
+        return `${n1}.${n2}`;
+    });
+
+    const segments: FoodSegment[] = [];
 
     // 2. Clear Delimiters: split by 'and', ',', 'with'
     const delimiterPattern = /\s+and\s+|,|\s+with\s+/gi;
     let initialParts = lower.split(delimiterPattern).map(p => p.trim()).filter(p => p.length > 2);
 
     // 3. Pre-process "of": e.g. "3/4 of a banana" -> "3/4 banana"
-    // Supports decimals with leading dots
     initialParts = initialParts.map(part => {
-        return part.replace(/((?:\d+(?:\/\d+|\.\d+)?|\.\d+)|one|two|three|four|five|six|seven|eight|nine|ten)\s+of\b\s*(?:a|an|the)?\s*/i, '$1 ');
+        return part.replace(new RegExp(`((?:\\d+(?:/\\d+|\\.\\d+)?|\\.\\d+)|${NUM_WORDS_LIST})\\s+of\\b\\s*(?:a|an|the)?\\s*`, 'i'), '$1 ');
     });
 
     // 4. Refining segments: look for numbers that aren't at the start and split there too
-    // Supports decimals with leading points (e.g. .75)
-    const numberPattern = /(?:\b\d+(?:\/\d+|\.\d+)?|\.\d+)\b|(?:one|two|three|four|five|six|seven|eight|nine|ten)\b/gi;
+    // Supports compound fractions like "one fourth"
+    const numberPattern = new RegExp(`(?:\\b\\d+(?:/\\d+|\\.\\d+)?|\\.\\d+)\\b|\\b${NUM_WORDS_LIST}\\b(?:\\s+${FRAC_WORDS_LIST})?|\\b${FRAC_WORDS_LIST}\\b`, 'gi');
     const finalParts: string[] = [];
 
     for (const part of initialParts) {
@@ -79,6 +96,16 @@ export function segmentMeal(utterance: string): ExtractionResult {
         const subParts: string[] = [];
 
         while ((matches = numberPattern.exec(part)) !== null) {
+            // Special Case: Don't split on "a/an" if it follows a fraction word (e.g. "half a banana")
+            const prevText = part.substring(0, matches.index).trim();
+            const prevWord = prevText.split(/\s+/).pop()?.toLowerCase();
+            const matchedText = matches[0].toLowerCase();
+            
+            if ((matchedText === 'a' || matchedText === 'an') && 
+                ['half', 'quarter', 'third', 'fourth', 'fifth', 'sixth', 'eighth'].includes(prevWord || '')) {
+                continue;
+            }
+
             if (matches.index > 0) {
                 subParts.push(part.substring(lastIndex, matches.index).trim());
                 lastIndex = matches.index;
@@ -90,33 +117,64 @@ export function segmentMeal(utterance: string): ExtractionResult {
 
     for (const part of finalParts) {
         let cleaned = part.trim();
+        let nameOnly = cleaned;
 
-        // 1. Remove glucose part if it exists in the segment
-        let nameOnly = cleaned.replace(/(?:glucose|sugar|level)\s+(?:is\s+)?\d+/, '').replace(/\d+\s+(?:mg\/dl|mgdl)/, '').trim();
+        // 2. Aggressive Filler Stripping
+        // Strips common pronouns and verbs to prevent "my glucose is" noise
+        const fillerPrefixes = /^(i\s+had|i\s+ate|i've\s+had|i've\s+eaten|i\s+am\s+having|having|ate|had|my|is|was|the|this|that|sugar|glucose|level|blood|reading)(?:\s+|$)/i;
+        nameOnly = nameOnly.replace(fillerPrefixes, '').trim();
 
-        // 2. Aggressive Filler & Article Stripping
-        // Strips "i had", "i ate", "i've had", "having", etc.
-        const fillerPrefixes = /^(i\s+had|i\s+ate|i've\s+had|i've\s+eaten|i\s+am\s+having|having|ate|had)(?:\s+|$)/i;
-        const articlePrefixes = /^(?:a|an|some|the)(?:\s+|$)/i;
+        // One more pass for common connectors and health terms
+        nameOnly = nameOnly.replace(/^(my|is|was|for|of|to|that|this|blood|sugar|glucose|level)(?:\s+|$)/i, '').trim();
 
-        nameOnly = nameOnly.replace(fillerPrefixes, '').replace(articlePrefixes, '').trim();
-
-        // Skip if empty or simple filler
         if (nameOnly.length < 2) continue;
 
-        // Support digits with possible leading dots
+        // --- Quantity Extraction & Unit Detection ---
         const numRegex = /(?:\d+(?:\/\d+|\.\d+)?|\.\d+)/;
-        const fractionMatch = nameOnly.match(/^(half|quarter|third)\s+(?:a\s+)?(.+)/);
-        const qtyPattern = new RegExp(`^(${numRegex.source})\\s+(.+)`);
-        const qtyMatch = nameOnly.match(qtyPattern);
-        const wordMatch = nameOnly.match(/^(one|two|three|four|five|six|seven|eight|nine|ten)\s+(.+)/);
+        const unitKeys = Object.keys(UNIT_ML).join('|');
+        const unitPattern = new RegExp(`^(${unitKeys})\\s+(?:of\\s+)?(.+)$`, 'i');
 
-        if (fractionMatch) {
-            segments.push({
-                quantity: NUMBER_WORDS[fractionMatch[1]],
-                name: fractionMatch[2].trim(),
-                originalText: cleaned
-            });
+        const resolveUnit = (qty: number, text: string, original: string) => {
+            // Clean articles from the name part here, after quantity/unit split
+            const cleanedText = text.replace(/^(?:a|an|some|the)\s+/i, '').trim();
+            const unitMatch = cleanedText.match(unitPattern);
+            
+            if (unitMatch) {
+                const unitKey = unitMatch[1].toLowerCase();
+                const foodName = unitMatch[2].trim().replace(/^(?:a|an|some|the)\s+/i, '');
+                const mlPerUnit = UNIT_ML[unitKey] ?? 100;
+                return {
+                    quantity: qty,
+                    name: foodName,
+                    originalText: original,
+                    gramsOverride: qty * mlPerUnit,
+                    unit: UNIT_CANONICAL[unitKey] ?? unitKey,
+                };
+            }
+            return {
+                quantity: qty,
+                name: cleanedText,
+                originalText: original
+            };
+        };
+        
+        // A. Fractions: "half a banana", "one fourth cup", "a fourth of an apple"
+        const compoundFracPattern = new RegExp(`^(${NUM_WORDS_LIST})\\s+(${FRAC_WORDS_LIST})\\s+(?:a\\s+|of\\s+)?(.+)`, 'i');
+        const simpleFracPattern = new RegExp(`^(${FRAC_WORDS_LIST})\\s+(?:a\\s+|of\\s+)?(.+)`, 'i');
+        
+        const compoundMatch = nameOnly.match(compoundFracPattern);
+        const simpleFracMatch = nameOnly.match(simpleFracPattern);
+        const qtyMatch = nameOnly.match(new RegExp(`^(${numRegex.source})\\s+(.+)`));
+        const wordMatch = nameOnly.match(new RegExp(`^(${NUM_WORDS_LIST})\\s+(.+)`, 'i'));
+
+        if (compoundMatch) {
+            const numPart = compoundMatch[1].toLowerCase();
+            const fracPart = compoundMatch[2].toLowerCase();
+            const qty = (NUMBER_WORDS[numPart] || 1) * (NUMBER_WORDS[fracPart] || 1);
+            segments.push(resolveUnit(qty, compoundMatch[3].trim(), cleaned));
+        } else if (simpleFracMatch) {
+            const fracPart = simpleFracMatch[1].toLowerCase();
+            segments.push(resolveUnit(NUMBER_WORDS[fracPart] || 1, simpleFracMatch[2].trim(), cleaned));
         } else if (qtyMatch) {
             const rawQty = qtyMatch[1].trim();
             let qty = 1;
@@ -126,56 +184,15 @@ export function segmentMeal(utterance: string): ExtractionResult {
             } else {
                 qty = parseFloat(rawQty);
             }
-            // Check if next token is a volume/weight unit (e.g. "2 cups of orange juice")
-            const unitKeys = Object.keys(UNIT_ML).join('|');
-            const unitPattern = new RegExp(`^(${unitKeys})\\s+(?:of\\s+)?(.+)$`, 'i');
-            const unitMatch = qtyMatch[2].trim().match(unitPattern);
-            if (unitMatch) {
-                const unitKey = unitMatch[1].toLowerCase();
-                const foodName = unitMatch[2].trim();
-                const mlPerUnit = UNIT_ML[unitKey] ?? 100;
-                segments.push({
-                    quantity: qty,
-                    name: foodName,
-                    originalText: cleaned,
-                    gramsOverride: qty * mlPerUnit,  // total grams/ml for this segment
-                    unit: UNIT_CANONICAL[unitKey] ?? unitKey,
-                });
-            } else {
-                segments.push({
-                    quantity: qty,
-                    name: qtyMatch[2].trim(),
-                    originalText: cleaned
-                });
-            }
+            segments.push(resolveUnit(qty, qtyMatch[2].trim(), cleaned));
         } else if (wordMatch) {
-            // Same unit detection for word-number matches
-            const wordQty = NUMBER_WORDS[wordMatch[1]];
-            const unitKeys = Object.keys(UNIT_ML).join('|');
-            const unitPattern = new RegExp(`^(${unitKeys})\\s+(?:of\\s+)?(.+)$`, 'i');
-            const unitMatch = wordMatch[2].trim().match(unitPattern);
-            if (unitMatch) {
-                const unitKey = unitMatch[1].toLowerCase();
-                const foodName = unitMatch[2].trim();
-                const mlPerUnit = UNIT_ML[unitKey] ?? 100;
-                segments.push({
-                    quantity: wordQty,
-                    name: foodName,
-                    originalText: cleaned,
-                    gramsOverride: wordQty * mlPerUnit,
-                    unit: UNIT_CANONICAL[unitKey] ?? unitKey,
-                });
-            } else {
-                segments.push({
-                    quantity: wordQty,
-                    name: wordMatch[2].trim(),
-                    originalText: cleaned
-                });
-            }
+            const wordQty = NUMBER_WORDS[wordMatch[1].toLowerCase()];
+            segments.push(resolveUnit(wordQty, wordMatch[2].trim(), cleaned));
         } else {
+            // Final fallback: just strip articles and treat as 1 unit
             segments.push({
                 quantity: 1,
-                name: nameOnly,
+                name: nameOnly.replace(/^(?:a|an|some|the)\s+/i, '').trim(),
                 originalText: cleaned
             });
         }

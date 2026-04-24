@@ -45,14 +45,18 @@
       "expo-router",
       "expo-sqlite",
       [
-        "expo-av",
+        "expo-audio",
         {
           "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone to log meals by voice."
         }
-      ]
+      ],
+      "expo-font",
+      "expo-asset",
+      "expo-speech-recognition"
     ],
     "experiments": {
-      "typedRoutes": true
+      "typedRoutes": true,
+      "reactCompiler": true
     },
     "extra": {
       "router": {
