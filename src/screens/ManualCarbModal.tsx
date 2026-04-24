@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useFlowStore } from '@/store/flowStore';
 
@@ -29,8 +30,10 @@ export default function ManualCarbModal() {
     };
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Manual Entry</Text>
+        <SafeAreaView style={styles.safeArea}>
+            <KeyboardAvoidingView style={styles.keyboardAvoid} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+                <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                    <Text style={styles.title}>Manual Entry</Text>
 
             <Text style={styles.label}>Total Carbs (g)</Text>
             <TextInput
@@ -68,14 +71,17 @@ export default function ManualCarbModal() {
             >
                 <Text style={styles.cancelText}>Cancel</Text>
             </TouchableOpacity>
-        </View>
+                </ScrollView>
+            </KeyboardAvoidingView>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#0a0a0a',
+    safeArea: { flex: 1, backgroundColor: '#0a0a0a' },
+    keyboardAvoid: { flex: 1 },
+    scrollContent: {
+        flexGrow: 1,
         padding: 24,
         justifyContent: 'center'
     },

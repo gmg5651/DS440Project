@@ -13,4 +13,5 @@ test('can insert and retrieve a meal log', async () => {
     const rows = await db.select().from(mealLogs);
     expect(rows.length).toBeGreaterThan(0);
     expect(rows[0].foodName).toBe('Pizza');
+    sqlite.close();
 });

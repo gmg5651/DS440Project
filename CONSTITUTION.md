@@ -45,3 +45,13 @@ Antigravity must follow these steps for every task:
 - **Decision Log**: Record major architectural choices in `/docs/decisions.md`.
 - **Feature Manifest**: Maintain a `features.json` mapping requirements to specific tests and implementation files.
 - **Setup Automation**: Maintain an `init.sh` or `setup-env.md` so a fresh Agent can stand up the project and run tests with zero human intervention.
+
+## 9. Mobile-First UX/UI Layout Principles
+To avoid retrofitting web-centric layouts for mobile edge cases (safe areas, virtual keyboards, variable device heights), all UI development must adhere to this universal mobile layout hierarchy by default:
+1. **The Safe Root**: Every top-level screen MUST be wrapped in a `SafeAreaView` (from `react-native-safe-area-context`) with `flex: 1` and a matching background color. Never use a raw `<View>` as a screen root.
+2. **Keyboard Immunity**: Any screen containing a `TextInput` MUST immediately nest a `<KeyboardAvoidingView style={{flex: 1}} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>` inside the root `SafeAreaView`.
+3. **Fluid Scrolling Boundaries**: To handle arbitrary device sizes and prevent "Trapped Scrolling":
+   - Use `<ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps="handled">` as the main content wrapper.
+   - **Never** apply `height: '100%'` to child elements inside a ScrollView, as it corrupts Android's scroll boundary calculations. Use `flex: 1` with a `minHeight` instead.
+4. **Natural Flex Flow > Absolute Placement**: Avoid `position: 'absolute'` for core layout components (like headers or footers). Rely on standard flexbox document flow (`justifyContent`, `alignItems`) to prevent UI elements from overlapping on smaller screens.
+5. **Touch Targets**: Ensure all interactive elements have a minimum hit area of 44x44 points.

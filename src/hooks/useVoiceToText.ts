@@ -1,85 +1,76 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { Platform } from 'react-native';
+import { useState, useCallback } from 'react';
+import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
 
 export function useVoiceToText() {
     const [status, setStatus] = useState<'idle' | 'listening' | 'done' | 'error'>('idle');
     const [transcript, setTranscript] = useState('');
     const [error, setError] = useState<string | null>(null);
-    const recognitionRef = useRef<any>(null);
 
-    useEffect(() => {
-        if (Platform.OS === 'web') {
-            const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    useSpeechRecognitionEvent('start', () => {
+        console.log('[DEBUG] Speech Recognition Started');
+        setStatus('listening');
+        setError(null);
+    });
 
-            if (SpeechRecognition) {
-                const recog = new SpeechRecognition();
-                recog.continuous = true;
-                recog.interimResults = true;
-                recog.lang = 'en-US';
+    useSpeechRecognitionEvent('end', () => {
+        console.log('[DEBUG] Speech Recognition Ended');
+    });
 
-                recog.onresult = (event: any) => {
-                    let text = '';
-                    for (let i = 0; i < event.results.length; i++) {
-                        text += event.results[i][0].transcript;
-                    }
-                    console.log('[DEBUG] Speech Recognition Result:', text);
-                    if (text.trim()) {
-                        setTranscript(text);
-                    }
-                };
-
-                recog.onstart = () => {
-                    console.log('[DEBUG] Speech Recognition Started');
-                    setStatus('listening');
-                    setError(null);
-                };
-
-                recog.onend = () => {
-                    console.log('[DEBUG] Speech Recognition Ended');
-                };
-
-                recog.onerror = (event: any) => {
-                    console.error('[DEBUG] Speech Recognition Error:', event.error);
-                    setError(event.error);
-                    if (event.error === 'not-allowed') {
-                        setStatus('error');
-                    }
-                };
-
-                recognitionRef.current = recog;
-            } else {
-                console.warn('[DEBUG] Speech Recognition NOT supported');
-                setError('browser-unsupported');
-            }
+    useSpeechRecognitionEvent('result', (event) => {
+        // Based on expo-speech-recognition docs, event.results contains the transcripts
+        let text = '';
+        if (event.results && event.results.length > 0) {
+            // For continuous recognition, you might want to combine them or just use the first transcript
+            // The library returns an array where results[0].transcript is often the full text.
+            text = event.results.map((r: any) => r.transcript).join(' ');
         }
-    }, []);
+        
+        console.log('[DEBUG] Speech Recognition Result:', text);
+        if (text.trim()) {
+            setTranscript(text);
+        }
+    });
 
-    const startRecording = useCallback(() => {
+    useSpeechRecognitionEvent('error', (event) => {
+        console.error('[DEBUG] Speech Recognition Error:', event.error, event.message);
+        setError(event.error);
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+            setStatus('error');
+        }
+    });
+
+    const startRecording = useCallback(async () => {
         console.log('[DEBUG] startRecording() called');
         setTranscript('');
         setError(null);
-        if (recognitionRef.current) {
-            try {
-                recognitionRef.current.start();
-                setStatus('listening');
-            } catch (e: any) {
-                console.warn('[DEBUG] start() failed:', e.message);
-                // If already started, just set status
+
+        try {
+            const result = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+            if (!result.granted) {
+                console.warn('[DEBUG] Permissions not granted');
+                setError('not-allowed');
+                setStatus('error');
+                return;
             }
-        } else {
-            console.warn('[DEBUG] No recognition instance available');
-            setStatus('listening');
+
+            ExpoSpeechRecognitionModule.start({
+                lang: 'en-US',
+                interimResults: true,
+                continuous: true,
+            });
+        } catch (e: any) {
+            console.warn('[DEBUG] start() failed:', e.message);
+            setStatus('error');
+            setError(e.message);
         }
     }, []);
 
     const stopRecording = useCallback(() => {
         console.log('[DEBUG] stopRecording() called');
-        if (recognitionRef.current) {
-            try {
-                recognitionRef.current.stop();
-            } catch (e: any) {
-                console.warn('[DEBUG] stop() failed:', e.message);
-            }
+        try {
+            ExpoSpeechRecognitionModule.stop();
+        } catch (e: any) {
+            console.warn('[DEBUG] stop() failed:', e.message);
         }
         setStatus('done');
     }, []);

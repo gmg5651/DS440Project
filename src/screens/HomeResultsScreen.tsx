@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFlowStore, FinalFoodItem } from '@/store/flowStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { segmentMeal } from '@/utils/nlpExtractor';
@@ -79,8 +80,13 @@ export default function HomeResultsScreen() {
     });
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Verification</Text>
+        <SafeAreaView style={styles.safeArea}>
+            <KeyboardAvoidingView 
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+                style={styles.keyboardAvoid}
+            >
+                <View style={styles.innerContainer}>
+                    <Text style={styles.title}>Verification</Text>
 
             {transcript ? (
                 <View style={styles.transcriptDebug}>
@@ -183,12 +189,16 @@ export default function HomeResultsScreen() {
             >
                 <Text style={styles.calcText}>Calculate Dose</Text>
             </TouchableOpacity>
-        </View>
+                </View>
+            </KeyboardAvoidingView>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#0a0a0a', padding: 20 },
+    safeArea: { flex: 1, backgroundColor: '#0a0a0a' },
+    keyboardAvoid: { flex: 1 },
+    innerContainer: { flex: 1, padding: 20 },
     title: { fontSize: 24, fontWeight: 'bold', color: '#fff', marginBottom: 20, marginTop: 40 },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     loadingText: { color: '#aaa', marginTop: 10 },
