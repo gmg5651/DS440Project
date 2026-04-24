@@ -29,7 +29,8 @@ it('handles numerical fractions like 2/3', () => {
 it('handles fractions like half and quarter', () => {
     const res = segmentMeal('a half cup of milk');
     expect(res.segments[0].quantity).toBe(0.5);
-    expect(res.segments[0].name).toBe('cup of milk');
+    expect(res.segments[0].name).toBe('milk');
+    expect(res.segments[0].unit).toBe('cup');
 });
 
 test('returns low confidence flag on ambiguous input', () => {
